@@ -1,4 +1,4 @@
-package cool;
+package java.cool;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -13,16 +13,16 @@ public class InheritanceGraph {
 
   private List<Node> inheritance_graph;
   private Map<String, Integer> class2Index;
-  private boolean hasMain;
+  private boolean foundMain;
 
-  private static final int ROOT_CLASS = 0;
-  private static AST.class_ root_ast = new AST.class_(Config.ROOT_TYPE, null, null, new ArrayList<>(), 0);
-  private static Node tree_root = new Node(root_ast, ROOT_CLASS);
+  private static final int OBJECT_CLASS_ID = 0;
+  private static AST.class_ root_ast = new AST.class_(CoolUtils.ROOT_TYPE_STR, null, null, new ArrayList<>(), 0);
+  private static Node tree_root = new Node(root_ast, OBJECT_CLASS_ID);
 
   public InheritanceGraph() {
     inheritance_graph = new ArrayList<>();
     class2Index = new HashMap<>();
-    hasMain = false;
+    foundMain = false;
     addDefaultClasses();
   }
 
@@ -30,8 +30,8 @@ public class InheritanceGraph {
     return tree_root;
   }
 
-  public boolean hasMain() {
-    return hasMain;
+  public boolean foundMain() {
+    return foundMain;
   }
 
   public hasClass(String className) {
@@ -48,12 +48,12 @@ public class InheritanceGraph {
   }
 
   private boolean isRestrictedClass(String className) {
-    return Config.IO_TYPE_ID.equals(className) || Config.BOOL_TYPE_ID.equals(className);
+    return CoolUtils.IO_TYPE_ID.equals(className) || CoolUtils.BOOL_TYPE_ID.equals(className);
   }
 
   private void addClass(AST.class_ ASTClass) {
     if (class2Index.containsKey(ASTClass.getName())) {
-      Config.errorReporter.report(CoolUtils.getFilename(),
+      Config.reportError(CoolUtils.getFilename(),
         ASTClass.getLineNumber(),
         new StringBuilder().append("An attempt to redefine base class: ")
           .append(ASTClass.getName()).toString());
@@ -61,7 +61,7 @@ public class InheritanceGraph {
       class2Index.put(ASTClass.getName(), inheritance_graph.size());
       inheritance_graph.add(new Node(ASTClass, inheritance_graph.size()));
       if (CoolUtils.MAIN_TYPE_STR.equals(ASTClass.getname())) {
-        hasMain = true;
+        foundMain = true;
       }
     }
   }
@@ -90,13 +90,13 @@ public class InheritanceGraph {
     if (typestr1.equals(typestr2)) {
       return typestr1;
     } else if (isRestrictedInheritanceClass(typestr1) || isRestrictedInheritanceClass(typestr2)) {
-      return CoolUtils.ROOT_TYPE_STR
+      return CoolUtils.ROOT_TYPE_STR;
     }
 
     Node node1 = inheritance_graph.get(class2Index.get(typestr1));
     Node node2 = inheritance_graph.get(class2Index.get(typestr2));
 
-    Node least_common_ancestor = getLeastCommonAncestor(typestr1, typestr2);
+    Node least_common_ancestor = getLeastCommonAncestor(node1, node2);
     return least_common_ancestor.getASTClass().getName();
   }
 
@@ -113,20 +113,20 @@ public class InheritanceGraph {
       if (visited.get(rightNode.getIndex())) {
         least_common_ancestor = rightNode;
       }
-      rightNode = rightNode;
+      rightNode = rightNode.getParent();
     }
 
     return least_common_ancestor;
   }
 
   public boolean checkGraphSemantics() {
-    boolean hasMain = false;
+    boolean foundMain = false;
 
     updateParents();
 
-    if (!hasMain) {
+    if (!foundMain) {
       hasError = true;
-      CoolUtils.errorReporter.report(CoolUtils.getFilename(), 0, " No Implementation of 'Main' class...");
+      CoolUtils.reportError(CoolUtils.getFilename(), 0, " No Implementation of 'Main' class...");
     }
 
     List<Stack<Node>> cycles = getCyclesInGraph();
@@ -138,8 +138,8 @@ public class InheritanceGraph {
         cycleString.setLength(0);
         int size = cycle.size();
 
-        for (int i = 0l i < size - 1; i++) {
-          cycleString.append(cycle.pop().getASTClass().getName()/.append(" -> "));
+        for (int i = 0; i < size - 1; i++) {
+          cycleString.append(cycle.pop().getASTClass().getName().append(" -> "));
         }
         AST.class_ lastClass = cycle.pop().getASTClass();
         String lastClassName = lastClass.getName();
@@ -148,7 +148,7 @@ public class InheritanceGraph {
         errorString.append("Found classes with cyclic dependency:\n");
         errorString.append(lastClassName).append(" -> ");
         errorString.append(cycleString).append(lastClass);
-        CoolUtils.errorReporter.report(CoolUtils.getFilename(), lastClass.getLineNumber(), errorString.toString());
+        CoolUtils.reportError(CoolUtils.getFilename(), lastClass.getLineNumber(), errorString.toString());
       }
     }
 
@@ -159,19 +159,19 @@ public class InheritanceGraph {
     for (Node coolClass: inheritance_graph) {
       if (coolClass.getASTClass().getParent() != null) {
         if (isRestrictedInheritanceClass(coolClass.getASTClass().getParent())) {
-          CoolUtils.errorReporter.report(CoolUtils.getFilename(),
+          CoolUtils.reportError(CoolUtils.getFilename(),
                     coolClass.getASTClass().getLineNumber(),
                     new StringBuilder().append("Cannot inherit base class '")
                             .append(coolClass.getASTClass().getParent()
                             .append("'").toString()
                     )
           );
-        } else if (class2Index.containsKey(coolClass.getASTClass().getParent()) {
+        } else if (class2Index.containsKey(coolClass.getASTClass().getParent())) {
           int parentIndex = class2Index.get(coolClass.getAstClass().getParent());
           coolClass.setParent(inheritance_graph.get(parentIndex));
           inheritance_graph.get(parentIndex).addChild(coolClass);
         } else {
-          CoolUtils.errorReporter.report(CoolUtils.getFilename(), coolClass.getASTClass().getLineNumber(),
+          CoolUtils.reportError(CoolUtils.getFilename(), coolClass.getASTClass().getLineNumber(),
                   new StringBUilder().append("Inherited class '").append(coolClass.getASTClass().getParent())
                   .append("' for '").append(coolClass.getASTClass().getName())
                   .append("' has not been declared").toString());
@@ -217,10 +217,9 @@ public class InheritanceGraph {
         if (parentIndex != Node.NO_PARENT) {
           if (
             (!visited.get(parentIndex) && getCyclesInGraphUsingStacks(parentIndex, visited, recStack, cycle)) ||
-            recStack.get(parentIndex) {
+            recStack.get(parentIndex)) {
               return true;
-            }
-          )
+          }
         }
       }
     }
@@ -303,9 +302,9 @@ public class InheritanceGraph {
       }
       this.ASTClass = ASTClass;
       this.index = index;
-      this.children = children;
+      // this.children = children;
       this.parent = null;
-      this.isInitiated = truel
+      this.isInitiated = true;
     }
 
     public void addChild(Node node) {
@@ -337,7 +336,7 @@ public class InheritanceGraph {
     }
 
     public boolean equals(Node node) {
-      return (this.index == node.getIndex())
+      return (this.index == node.getIndex());
     }
   }
 }

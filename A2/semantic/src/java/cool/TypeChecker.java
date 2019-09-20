@@ -75,10 +75,32 @@ class TypeChecker {
             if (T0 == null) {
                 reportError(programClass.name,
                     programClass.lineNo,
-                    "Attribute ")
+                    "Attribute with type '" + T0.toString() +
+                    "' in classInfo.objectInfo is not equal to declared type " +
+                    attrNode.typeid + ". This maybe caused due to multiple definitions or inherited variables"
+                );
+            } else {
+                if (!(attrNode instanceof AST.no_expr)) {
+                    List<VariableMapping> variableMappings = new ArrayList<VariableMapping>();
+
+                    createNewObjectScope(classInfo.objectInfo, programClass, variableMappings);
+                    TypeCheck(attrNode.value, classInfo, programClass);
+                    String T1 = attrNode.value.type;
+                    if (!classInfo.inheritanceGraph.conforms(T1.toString(), T0.toString(), CoolUtils.OBJECT_TYPE_STR)) {
+                        reportError(programClass.filename,
+                            programClass.lineNo,
+                            "Inferred type " + T1.toString() +
+                            " of initialization of attribute " + attrName.name +
+                            " does not conform to declared type " + attrName.typeid
+                        );
+                    }
+                    classInfo.exitScope();
+                }
             }
         }
     }
+
+    TypeChecker()
 
     private static class VariableMapping {
         String leftString;

@@ -34,25 +34,35 @@ public class Vertex {
 public static class InheritanceGraph {
 	private Map<String, Vertex> name2Vertex;
 	private List<Vertex> vertices;
+	private Map<String, String> parentNameMap;
+
+	private String root;
 
 	public InheritanceGraph() {
 		name2Vertex = new HashMap<String, Vertex>();
+		parentNameMap = new HashMap<String, String>();
+		vertices = new ArrayList<Vertex>();
+		root = "Object";
 	}
 
-	public checkClass(String classname){
+	public boolean checkClass(String classname) {
 		return name2Index.containsKey(classnames);
 	}
 
-	private getVertex(String name){
+	private Vertex getVertex(String name) {
 		return name2Vertex.get(name);
 	}
 
-	private addVertexToMap(String name,Vertex v){
-		name2Vertex.put(name,v);
+	private void addVertexToMap(String name, Vertex v) {
+		name2Vertex.put(name, v);
 	}
 
-	public ClearGraph(){
-		for (Vertex v:vertices){
+	private void addParentToMap(String name, String par_name) {
+		parentNameMap.put(name, par_name);
+	}
+
+	public void ClearGraph() {
+		for (Vertex v : vertices) {
 			v.clear(); // clear the adjacency list for each Vertex
 		}
 	}
@@ -63,6 +73,8 @@ public static class InheritanceGraph {
 		addVertexToMap(start, u);
 		addVertexToMap(end, v);
 		u.add_neighbour(v);
+		addParent(start, end);
+		parentNameMap.put(end, start);
 	}
 
 	public boolean cycle_present() {
@@ -98,16 +110,34 @@ public static class InheritanceGraph {
 		Vertex root = name2vertex.get(rootVertex);
 		path_to_u = get_path(root, u1, path_to_u);
 		path_to_v = get_path(root, v1, path_to_v);
+		Vertex prev = root;
 		for (Vertex it : path_to_u)
 			if (path_to_v.contains(it) == false)
-				return it.getName();
+				return prev.getName();
+			else
+				prev = it;
 	}
 
-	public get_path(Vertex u,Vertex target,HastSet<Vertex>path){
-		path.add(u);
-		if(u.equals(target))
-			return path;
-		for (Vertex k:u.children)
-			get_path(k,target,path);
+	public boolean conforms(String class1, String class2) {
+		if (class1.equals("no_type"))
+			return true;
+		if (class2 == null)
+			return false;
+		while (class1 != null) {
+			if (class1 == class2) {
+				return true;
+			}
+			class1 = parentNameMap.get(class1);
+		}
+		return false;
 	}
+
+	public HastSet<Vertex> get_path(Vertex u, Vertex target, HastSet<Vertex> path) { // root to vertex path
+		path.add(u);
+		if (u.equals(target))
+			return path;
+		for (Vertex k : u.children)
+			get_path(k, target, path);
+	}
+
 }

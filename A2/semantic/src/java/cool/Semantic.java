@@ -34,6 +34,8 @@ public class Semantic {
 		checkForUndefinedParent(program);
 
 		analyzeClassFeatures(program);
+
+		recurseTypeChecker(program);
 	}
 
 	private void runCycleReporter(AST.program program) {
@@ -214,5 +216,39 @@ public class Semantic {
 			}
 		}
 		return foundError;
+	}
+
+	private boolean recurseTypeChecker(AST.program program) {
+
+		boolean foundError = false;
+		for (class_ programClass: program.classes) {
+			for (AST.feature classFeature: programClass.features) {
+				if (classFeature instanceof AST.attr) TypeChecker((AST.attr) f, classInfo, programClass);
+				else if (classFeature instanceof AST.method) TypeChecker((AST.method) f, classInfo, programClass);
+				else {
+					reportError(programClass.filename,
+						programClass.lineNo,
+						"Reached a forbidden point."
+					);
+					foundError = true;
+				}
+			}
+		}
+		return foundError;
+	}
+
+	private boolean isAttrInherited(AST.attr classAttr, class_ programClass, ClassInfo classInfo) {
+		Map<String, String> parentMap = classInfo.inheritanceGraph.getParentMap(Coolutils.OBJECT_TYPE_STR);
+		String programClassParent = parentMap.get(programClass.name);
+		while (programClassParent != null) {
+			class_ nextParentClass = classInfo.classNameMapper.get(programClassParent);
+			for (AST.feature classFeatures: nextParentClass.features) {
+				if ((classFeatures instanceof AST.attr) && (((AST.attr) classFeatures).name.equals(classAttr))) {
+					return true;
+				}
+			}
+			programClassParent = parentMap.get(programClassParent);
+		}
+		return false;
 	}
 }

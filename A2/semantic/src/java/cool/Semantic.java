@@ -3,6 +3,7 @@ package cool;
 import java.util.*;
 import cool.CoolUtils;
 import cool.AST.class_;
+import cool.TypeChecker;
 
 public class Semantic {
 	private boolean errorFlag = false;
@@ -194,7 +195,7 @@ public class Semantic {
 			classInfo.attrInfo.insert(className, classAttrName2Type);
 		}
 
-		analyzeMainClass(foundMain, foundmain, mainHasArgs, classInfo);
+		return analyzeMainClass(foundMain, foundmain, mainHasArgs, classInfo);
 	}
 
 	private boolean analyzeMainClass(boolean foundMain, boolean foundmain, boolean mainHasArgs, ClassInfo classInfo) {
@@ -221,15 +222,14 @@ public class Semantic {
 	private boolean recurseTypeChecker(AST.program program) {
 
 		boolean foundError = false;
-		for (class_ programClass: program.classes) {
-			for (AST.feature classFeature: programClass.features) {
-				if (classFeature instanceof AST.attr) TypeChecker((AST.attr) f, classInfo, programClass);
-				else if (classFeature instanceof AST.method) TypeChecker((AST.method) f, classInfo, programClass);
+		for (class_ programClass : program.classes) {
+			for (AST.feature classFeature : programClass.features) {
+				if (classFeature instanceof AST.attr)
+					new TypeChecker((AST.attr) classFeature, classInfo, programClass);
+				else if (classFeature instanceof AST.method)
+					new TypeChecker((AST.method) classFeature, classInfo, programClass);
 				else {
-					reportError(programClass.filename,
-						programClass.lineNo,
-						"Reached a forbidden point."
-					);
+					reportError(programClass.filename, programClass.lineNo, "Reached a forbidden point.");
 					foundError = true;
 				}
 			}
@@ -238,16 +238,15 @@ public class Semantic {
 	}
 
 	private boolean isAttrInherited(AST.attr classAttr, class_ programClass, ClassInfo classInfo) {
-		Map<String, String> parentMap = classInfo.inheritanceGraph.getParentMap(Coolutils.OBJECT_TYPE_STR);
-		String programClassParent = parentMap.get(programClass.name);
+		String programClassParent = classInfo.Graph.parentNameMap.get(programClass.name);
 		while (programClassParent != null) {
-			class_ nextParentClass = classInfo.classNameMapper.get(programClassParent);
-			for (AST.feature classFeatures: nextParentClass.features) {
+			class_ nextParentClass = classInfo.ClassNameMap.get(programClassParent);
+			for (AST.feature classFeatures : nextParentClass.features) {
 				if ((classFeatures instanceof AST.attr) && (((AST.attr) classFeatures).name.equals(classAttr))) {
 					return true;
 				}
 			}
-			programClassParent = parentMap.get(programClassParent);
+			programClassParent = classInfo.Graph.parentNameMap.get(programClassParent);
 		}
 		return false;
 	}

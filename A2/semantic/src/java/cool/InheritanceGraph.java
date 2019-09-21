@@ -1,6 +1,7 @@
 package cool;
 
 import java.util.*;
+import cool.CoolUtils;
 
 class Vertex {
 
@@ -34,7 +35,7 @@ class Vertex {
 public class InheritanceGraph {
 	private Map<String, Vertex> name2Vertex;
 	private List<Vertex> vertices;
-	private Map<String, String> parentNameMap;
+	public Map<String, String> parentNameMap;
 
 	public String Root;
 

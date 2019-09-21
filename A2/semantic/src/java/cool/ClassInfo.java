@@ -6,8 +6,8 @@ import cool.AST.class_;;
 class ClassInfo {
     public InheritanceGraph Graph;
     public Map<String, class_> ClassNameMap;
-    public ScopeTable<Map<String, String>> objectEnv;
-    public ScopeTable<Map<String, List<String>>> methodEnv;
+    public ScopeTable<Map<String, String>> attrInfo;
+    public ScopeTable<Map<String, List<String>>> methodInfo;
 
     public ClassInfo() {
         Graph = new InheritanceGraph();
@@ -24,6 +24,17 @@ class ClassInfo {
         addStringClass();
         addIntClass();
         addBoolClass();
+    }
+
+    public void createNewObjectInfo() {
+        attrInfo = new ScopeTable<Map<String, String>>();
+        attrInfo.enterScope();
+
+    }
+
+    public void createNewMethodInfo() {
+        methodInfo.enterScope();
+        methodInfo = new ScopeTable<Map<String, List<String>>>();
     }
 
     public void addObjectClass() {
@@ -109,8 +120,8 @@ class ClassInfo {
                 System.out.println("feature is either attribute or method");
             }
         }
-        methodEnv.insert(classs, methodArgMap);
-        objectEnv.insert(classs, attrTypeMap);
+        methodInfo.insert(classs, methodArgMap);
+        attrInfo.insert(classs, attrTypeMap);
     }
 
 }

@@ -2,7 +2,7 @@ package cool;
 
 import java.util.*;
 
-public class Vertex {
+class Vertex {
 
 	private String name;
 	private Vertex parent;
@@ -22,7 +22,7 @@ public class Vertex {
 		return this.name == node.getName();
 	}
 
-	public add_neighbour(Vertex node){
+	public void add_neighbour(Vertex node) {
 		children.add(node);
 	}
 
@@ -31,22 +31,22 @@ public class Vertex {
 	}
 }
 
-public static class InheritanceGraph {
+public class InheritanceGraph {
 	private Map<String, Vertex> name2Vertex;
 	private List<Vertex> vertices;
 	private Map<String, String> parentNameMap;
 
-	private String root;
+	public String Root;
 
 	public InheritanceGraph() {
 		name2Vertex = new HashMap<String, Vertex>();
 		parentNameMap = new HashMap<String, String>();
 		vertices = new ArrayList<Vertex>();
-		root = "Object";
+		Root = "Object";
 	}
 
 	public boolean checkClass(String classname) {
-		return name2Index.containsKey(classnames);
+		return name2Vertex.containsKey(classname);
 	}
 
 	private Vertex getVertex(String name) {
@@ -73,12 +73,12 @@ public static class InheritanceGraph {
 		addVertexToMap(start, u);
 		addVertexToMap(end, v);
 		u.add_neighbour(v);
-		addParent(start, end);
+		addParentToMap(start, end);
 		parentNameMap.put(end, start);
 	}
 
 	public boolean cycle_present() {
-		Map<Vertex, Int> colour = new HashMap<Vertex, Int>();
+		Map<Vertex, Integer> colour = new HashMap<Vertex, Integer>();
 		for (Vertex v : vertices)
 			colour.put(v, 0);
 		for (Vertex v : vertices) {
@@ -88,7 +88,7 @@ public static class InheritanceGraph {
 		return false;
 	}
 
-	public boolean dfs(Vertex v, Map<Vertex, Int> colour) {
+	public boolean dfs(Vertex v, Map<Vertex, Integer> colour) {
 		colour.replace(v, 1);
 		for (Vertex k : v.children) {
 			if (colour.get(k) == 1)
@@ -101,21 +101,28 @@ public static class InheritanceGraph {
 	}
 
 	public String LowestCommonAncestor(String u, String v, String rootVertex) {
-		// get path from root to vertex u and vertex v
-		// once we have the paths get the lca
-		HashSet<Vertex> path_to_u;
-		HashSet<Vertex> path_to_v;
-		Vertex u1 = name2vertex.get(u);
-		Vertex v1 = name2vertex.get(v);
-		Vertex root = name2vertex.get(rootVertex);
-		path_to_u = get_path(root, u1, path_to_u);
-		path_to_v = get_path(root, v1, path_to_v);
-		Vertex prev = root;
-		for (Vertex it : path_to_u)
-			if (path_to_v.contains(it) == false)
-				return prev.getName();
-			else
-				prev = it;
+
+		Stack<String> path_to_u = new Stack<String>();
+		Stack<String> path_to_v = new Stack<String>();
+		String iter = u;
+		while (iter != null) {
+			path_to_u.push(iter);
+			iter = parentNameMap.get(iter);
+		}
+		iter = v;
+		while (iter != null) {
+			path_to_v.push(iter);
+			iter = parentNameMap.get(iter);
+		}
+		String prev = Root;
+		while (true) {
+			if (!path_to_v.empty() && !path_to_u.empty() && path_to_v.peek() == path_to_u.peek()) {
+				prev = path_to_v.peek();
+				path_to_v.pop();
+				path_to_u.pop();
+			} else
+				return prev;
+		}
 	}
 
 	public boolean conforms(String class1, String class2) {
@@ -131,13 +138,4 @@ public static class InheritanceGraph {
 		}
 		return false;
 	}
-
-	public HastSet<Vertex> get_path(Vertex u, Vertex target, HastSet<Vertex> path) { // root to vertex path
-		path.add(u);
-		if (u.equals(target))
-			return path;
-		for (Vertex k : u.children)
-			get_path(k, target, path);
-	}
-
 }

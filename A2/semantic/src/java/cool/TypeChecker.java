@@ -87,6 +87,50 @@ class TypeChecker {
         }
     }
 
+    TypeChecker(AST.block node, ClassInfo classInfo, class_ programClass) {
+        for (AST.expression exp : node.l1) {
+            TypeChecker(exp, classInfo, programClass);
+            node.type = exp.type;
+        }
+    }
+
+    TypeChecker(AST.assign node, ClassInfo classInfo, class_ programClass) {
+        String type = Attrtype(node.name, classInfo, programClass);
+        if (type == null) {
+            reportError(programClass.filename, programClass.lineNo, "Undefined Identifier :", node.name);
+            node.type = CoolUtils.OBJECT_TYPE_STR;
+        } else {
+            TypeChecker(node.e1, classInfo, programClass);
+            String type_prime = node.e1.type;
+            // if(classInfo.)
+        }
+
+    }
+
+    TypeChecker(AST.cond node, ClassInfo classInfo, class_ programClass) {
+        TypeChecker(node.predicate, classInfo, programClass);
+        if (!node.predicate.type.equals(CoolUtils.BOOL_TYPE_STR)) {
+            reportError(programClass.filename, programClass.lineNo, "Predicate of conditional must be of Bool type");
+            node.type = CoolUtils.OBJECT_TYPE_STR;
+        }
+        TypeChecker(node.ifbody, classInfo, programClass);
+        TypeChecker(node.elsebody, classInfo, programClass);
+        node.type = classInfo.Graph.LowestCommonAncestor(node.ifbody.type, node.elsebody.type); // check again
+    }
+
+    TypeChecker(AST.loop node, ClassInfo classInfo, class_ programClass) {
+        TypeChecker(node.predicate, classInfo, programClass);
+        if (!node.predicate.type.equals(CoolUtils.BOOL_TYPE_STR)) {
+            reportError(programClass.filename, programClass.lineNo,
+                    "Infered Predicate of while loop must be of Bool type");
+            node.type = CoolUtils.OBJECT_TYPE_STR;
+        } else {
+            TypeChecker(node.body, classInfo, programClass);
+            node.type = CoolUtils.OBJECT_TYPE_STR;
+        }
+
+    }
+
     TypeChecker(AST.plus node, ClassInfo classInfo, class_ programClass) {
         TypeChecker(node.e1, classInfo, programClass);
         TypeChecker(node.e2, classInfo, programClass);

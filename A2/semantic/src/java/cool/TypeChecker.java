@@ -100,7 +100,106 @@ class TypeChecker {
         }
     }
 
-    TypeChecker()
+    TypeChecker(AST.static_dispatch staticDispatchNode, ClassInfo classInfo, class_ programClass) {
+        TypeChecker(staticDispatchNode.caller, classInfo, programClass);
+        String T0 = staticDispatchNode.caller.type;
+        List<String> actualTypes = new ArrayList<String>();
+        for (AST.experssion nodeExpression: staticDispatchNode.actuals) {
+            TypeChecker(nodeExpression, classInfo, programClass);
+            actualTypes.add(expressionNode.type);
+        }
+
+        if (!classInfo.graph.conforms(T0, node.typeid, CoolUtils.OBJECT_TYPE_STR)) {
+            reportError(programClass.filename,
+                staticDispatchNode.lineNo,
+                "Exrpession type " + T0 + " does not conform to declared " +
+                "static dispatch type" + node.typeid
+            );
+        }
+
+        Map<String, List<String>> method2Args = classInfo.methodInfo.lookUpGlobal(staticDispatchNode.typeid);
+        if (method2Args == null) {
+            reportError(classInfo.filename,
+                staticDispatchNode.lineNo,
+                "Class " + programClass.name + " was not found in " +
+                "classInfo.methodInfo"
+            );
+            staticDispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
+        } else {
+            if (actualTypes.size() != formalTypes.size() - 1) {
+                reportError(programClass.filename,
+                    staticDispatchNode.lineNo,
+                    "Method " + staticDispatchNode.name + " of class " +
+                    programClass.name + " should be called with " +
+                    String.valueOf(formalTypes.size() - 1) + " but was called " +
+                    "with " + String.valueOf(actualTypes.size()) + " arguments."
+                );
+                staticDispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
+            } else {
+                for (int i = 0; i < actualTypes.size(); i++) {
+                    if (!classInfo.graph.conforms(actualTypes.get(i), formalTypes.get(i), CoolUtils.OBJECT_TYPE_STR)) {
+                        reportError(classInfo.filename,
+                            staticDispatchNode.lineNo,
+                            "Inferred type " + actualTypes.get(i) + " does not " +
+                            "conform to formal type " + formalTypes.get(i) +
+                            " for dispatch " + staticDispatchNode.name + " of " +
+                            " Class " + programClass.name
+                        );
+                        staticDispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
+                        return;
+                    }
+                }
+                String T_return = formalTypes.get(formalType.size() - 1);
+                staticDispatchNode.type = T_return;
+            }
+        }
+    }
+
+    TypeChecker(AST.dispatch dispatchNode, ClassInfo classInfo, class_ programClass) {
+        TypeChecker(dispatchNode.caller, classInfo, programClass);
+        String T0 = dispatchNode.caller.type;
+        List<String> actualTypes = new ArrayList<String>();
+        for (AST.expression nodeExpression: dispatchNode.actuals) {
+            TypeChecker(nodeExpression, classInfo, programClass);
+            actualTypes.add(nodeExpression.type);
+        }
+        String T0_prime = T0;
+
+        Map<String, List<String>> method2Args = classInfo.methodInfo.lookUpGlobal(programClass.name);
+        if (method2Args == null) {
+            reportError(programClass.filename,
+                dispatchNode.lineNo,
+                "Method " +  dispatchNode.name + " of Class " + programClass.name +
+                " was not found in classInfo.methodInfo "
+            );
+            dispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
+        } else {
+            List<String> formalTypes = getFormalList(dispatchNode.name, classInfo.classnameMap.get(T0_prime), classInfo);
+            if (formalTypes == null) {
+                reportError(programClass.filename,
+                    dispatchNode.lineNo,
+                    "Dispatch method was " + dispatchNode.name + " not found."
+                );
+                dispatchNode.type = CollUtils.OBJECT_TYPE_STR;
+            } else {
+                for (int i = 0; i < actualTypes.size(); i++) {
+                    if (!classInfo.graph.conforms(actualTypes.get(i), formalTypes.get(i), CoolUtils.OBJECT_TYPE_STR)) {
+                        reportError(programClass.filename,
+                            dispatchNode.lineNo,
+                            "Method dispatch " + dispatchNode.name + " of class " +
+                            programClass.name + " was called with argument number "
+                            + String.valueOf(i) + " with type " + actualTypes.get(i) +
+                            " which does not conform with type + " + formalTypes.get(i)
+                        );
+                        dispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
+                        return;
+                    }
+                }
+                String T_return = formalTypes.get(formalTypes.size() - 1);
+                dispatchNode.type = T_return;
+            }
+        }
+    }
 
     private static class VariableMapping {
         String leftString;

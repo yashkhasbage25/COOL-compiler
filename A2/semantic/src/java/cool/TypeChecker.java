@@ -4,6 +4,7 @@ import java.util.*;
 import cool.AST.class_;
 import cool.AST;
 import cool.CoolUtils;
+import java.util.ArrayList;
 
 class TypeChecker {
 
@@ -104,7 +105,132 @@ class TypeChecker {
             String type_prime = node.e1.type;
             // if(classInfo.)
         }
+    }
 
+    TypeChecker(AST.expression node, ClassInfo classInfo, class_ programClass) {
+
+        if (node instanceof AST.static_dispatch)
+            TypeChecker((AST.static_dispatch) node, classInfo, programClass);
+
+        else if (node instanceof AST.dispatch)
+            TypeChecker((AST.dispatch) node, classInfo, programClass);
+
+        if (node instanceof AST.assign)
+            TypeChecker((AST.assign) node, classInfo, programClass);
+
+        else if (node instanceof AST.cond)
+            TypeChecker((AST.cond) node, classInfo, programClass);
+
+        else if (node instanceof AST.block)
+            TypeChecker((AST.block) node, classInfo, programClass);
+
+        else if (node instanceof AST.loop)
+            TypeChecker((AST.loop) node, classInfo, programClass);
+
+        else if (node instanceof AST.let)
+            TypeChecker((AST.let) node, classInfo, programClass);
+
+        else if (node instanceof AST.typcase)
+            TypeChecker((AST.typcase) node, classInfo, programClass);
+
+        else if (node instanceof AST.new_)
+            TypeChecker((AST.new_) node, classInfo, programClass);
+
+        else if (node instanceof AST.isvoid)
+            TypeChecker((AST.isvoid) node, classInfo, programClass);
+
+        else if (node instanceof AST.plus)
+            TypeChecker((AST.plus) node, classInfo, programClass);
+
+        else if (node instanceof AST.sub)
+            TypeChecker((AST.sub) node, classInfo, programClass);
+
+        else if (node instanceof AST.mul)
+            TypeChecker((AST.mul) node, classInfo, programClass);
+
+        else if (node instanceof AST.divide)
+            TypeChecker((AST.divide) node, classInfo, programClass);
+
+        else if (node instanceof AST.comp)
+            TypeChecker((AST.comp) node, classInfo, programClass);
+
+        else if (node instanceof AST.lt)
+            TypeChecker((AST.lt) node, classInfo, programClass);
+
+        else if (node instanceof AST.leq)
+            TypeChecker((AST.leq) node, classInfo, programClass);
+
+        else if (node instanceof AST.eq)
+            TypeChecker((AST.eq) node, classInfo, programClass);
+
+        else if (node instanceof AST.neg)
+            TypeChecker((AST.neg) node, classInfo, programClass);
+
+        else if (node instanceof AST.object)
+            TypeChecker((AST.object) node, classInfo, programClass);
+
+        else if (node instanceof AST.bool_const)
+            TypeChecker((AST.bool_const) node, classInfo, programClass);
+
+        else if (node instanceof AST.int_const)
+            TypeChecker((AST.int_const) node, classInfo, programClass);
+
+        else if (node instanceof AST.string_const)
+            TypeChecker((AST.string_const) node, classInfo, programClass);
+
+    }
+
+    TypeChecker(AST.typecase node, ClassInfo classInfo, class_ programClass) {
+        TypeChecker(node.predicate, classInfo, programClass);
+        Set<String> branchDeclerations = new HashSet<String>();
+        List<String> typecases = new LinkedList<String>();
+        for (AST.branch b : node.branchs) {
+            ArrayList<Pair<String, String>> newBindings = new ArrayList<Pair<String, String>>();
+            newBindings.add(new Pair<String, String>(b.name, b.type));
+            updateObjectEnv(classInfo.attrInfo, classInfo, newBindings);
+            if (branchDeclerations.contains(b.type)) {
+                reportError(programClass.filename, programClass.lineNo, "Same branch exists"); // check
+                node.type = "Object";
+            } else {
+                branchDeclerations.add(b.type);
+            }
+
+            AST.expression exp = b.value;
+            TypeChecker(exp, classInfo, programClass);
+            String type_case = exp.type;
+            typecases.add(type_case);
+            classInfo.attrInfo.exitScope();
+        }
+        if (typecases.isEmpty()) {
+            reportError(programClass.filename, programClass.lineNo, "atleast 1 type requires"); // check
+        } else {
+            String case_type0 = typecases.get(0);
+            for (int i = 1; i < typecases.size(); i++) {
+                String type1 = typecases.get(i);
+                case_type0 = classInfo.Graph.LowestCommonAncestor(type1, type0);
+                // check again
+            }
+            node.type = case_type0;
+        }
+    }
+
+    TypeChecker(AST.let node, ClassInfo classInfo, class_ programClass) {
+        String T0_prime_string;
+        String type_decl = node.typeid;
+        T0_prime_string = type_decl; // both are Same
+        if (!(node.value instanceof AST.no_expr)) {
+            TypeChecker(node.value, classInfo, programClass);
+            String T1 = node.value.type;
+            if (!classInfo.Graph.conforms(T1, T0_prime_string)) {
+                reportError(programClass.filename, programClass.lineNo, "Infered type does not conform to identifier");
+            }
+        }
+        ArrayList<Pair<String, String>> newBindings = new ArrayList<Pair<String, String>>();
+        newBindings.add(new Pair<String, String>(node.name, type_decl));
+        updateObjectEnv(c.objectEnv, curr, newBindings);
+        TypeChecker(node.body, classInfo, programClass);
+        node.type = node.body.type;
+        classInfo.attrInfo.exitScope();
     }
 
     TypeChecker(AST.cond node, ClassInfo classInfo, class_ programClass) {

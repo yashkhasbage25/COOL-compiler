@@ -28,6 +28,7 @@ class CoolUtils {
     }
 
     public static List<String> getFormalList(String methodName, class_ programClass, ClassInfo classInfo) {
+        System.out.println(31); System.out.println(classInfo.methodInfo.lookUpGlobal(programClass.name));
         if (classInfo.methodInfo.lookUpGlobal(programClass.name) != null
                 && classInfo.methodInfo.lookUpGlobal(programClass.name).get(methodName) != null) {
             return classInfo.methodInfo.lookUpGlobal(programClass.name).get(methodName);

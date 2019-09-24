@@ -27,10 +27,9 @@ public class Semantic {
 
 	public Semantic(AST.program program) {
 
-		classInfo.fillDefaultClasses();
 		classInfo.createNewAttrInfo();
 		classInfo.createNewMethodInfo();
-
+		classInfo.fillDefaultClasses();
 		collectAndValidateClasses(program);
 		System.out.println("valied classes");
 		runCycleReporter(program);
@@ -46,7 +45,7 @@ public class Semantic {
 
 	private void runCycleReporter(AST.program program) {
 		boolean flag=classInfo.Graph.cyclePresent();
-		System.out.println(flag);
+		// System.out.println(flag);
 		if(flag)
 			reportError(program.classes.get(0).filename, 0, "Cycle detected");
 	}

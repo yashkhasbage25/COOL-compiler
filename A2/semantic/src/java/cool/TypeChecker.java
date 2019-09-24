@@ -40,7 +40,6 @@ class TypeChecker {
                 CoolUtils.createNewObjectScope(classInfo.attrInfo, programClass, variableMapping);
                 new TypeChecker(methodNode.body, classInfo, programClass);
                 classInfo.attrInfo.exitScope();
-
                 String T0_prime_string = methodNode.body.type;
 
                 if (classInfo.ClassNameMap.get(methodNode.typeid) == null) {
@@ -66,7 +65,7 @@ class TypeChecker {
             String T0 = classAttrName2Type.get(attrNode.name);
             if (T0 == null) {
                 reportError(programClass.name, programClass.lineNo,
-                        "Attribute with type '" + T0.toString()
+                        "Attribute with type '" + T0
                                 + "' in classInfo.attrInfo is not equal to declared type " + attrNode.typeid
                                 + ". This maybe caused due to multiple definitions or inherited variables");
             } else {
@@ -434,11 +433,14 @@ class TypeChecker {
                     + programClass.name + " was not found in classInfo.methodInfo ");
             dispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
         } else {
+            System.out.println(431);
             List<String> formalTypes = CoolUtils.getFormalList(dispatchNode.name, classInfo.ClassNameMap.get(T0_prime),
                     classInfo);
+            System.out.println(439);System.out.println(dispatchNode.name); System.out.println(classInfo.ClassNameMap.get(T0_prime).name);  
+
             if (formalTypes == null) {
                 reportError(programClass.filename, dispatchNode.lineNo,
-                        "Dispatch method was " + dispatchNode.name + " not found.");
+                        "Dispatch method " + dispatchNode.name + " was not found.");
                 dispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
             } else {
                 for (int i = 0; i < actualTypes.size(); i++) {

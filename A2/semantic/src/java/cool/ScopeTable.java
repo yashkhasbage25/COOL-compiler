@@ -32,7 +32,7 @@ public class ScopeTable<T> {
 	}
 
 	T lookUpGlobal(String t) {
-		for (int i = scope; i >= 0; i--) {
+		for (int i = scope; i >= 0; i--) { System.out.println("lookup");
 			if (maps.get(i).containsKey(t))
 				return maps.get(i).get(t);
 		}

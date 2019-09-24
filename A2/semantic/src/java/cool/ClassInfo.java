@@ -19,13 +19,13 @@ class ClassInfo {
     }
 
     public void fillDefaultClasses() {
+        createNewAttrInfo();
+        createNewMethodInfo();
         addObjectClass();
         addIOClass();
         addStringClass();
         addIntClass();
         addBoolClass();
-        createNewAttrInfo();
-        createNewMethodInfo();
     }
 
     public void createNewAttrInfo() {
@@ -35,8 +35,8 @@ class ClassInfo {
     }
 
     public void createNewMethodInfo() {
-        methodInfo.enterScope();
         methodInfo = new ScopeTable<Map<String, List<String>>>();
+        methodInfo.enterScope();
     }
 
     public void addObjectClass() {

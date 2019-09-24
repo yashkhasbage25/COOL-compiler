@@ -74,7 +74,6 @@ public class InheritanceGraph {
 		addVertexToMap(start, u);
 		addVertexToMap(end, v);
 		u.add_neighbour(v);
-		addParentToMap(start, end);
 		parentNameMap.put(end, start);
 	}
 

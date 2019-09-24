@@ -32,17 +32,21 @@ public class Semantic {
 		classInfo.createNewMethodInfo();
 
 		collectAndValidateClasses(program);
+		System.out.println("valied classes");
 		runCycleReporter(program);
+		System.out.println("cycle check done");
 		checkForUndefinedParent(program);
-
+		System.out.println("undefined parent check done");
 		analyzeClassFeatures(program);
-
+		System.out.println("analyze class feature done");
 		recurseTypeChecker(program);
+		System.out.println("recurseive type checker done");
 		errorFlag = typeCheckErrorFlag;
 	}
 
 	private void runCycleReporter(AST.program program) {
 		boolean flag=classInfo.Graph.cyclePresent();
+		System.out.println(flag);
 		if(flag)
 			reportError(program.classes.get(0).filename, 0, "Cycle detected");
 	}
@@ -122,7 +126,7 @@ public class Semantic {
 		boolean foundError = false;
 
 		for (class_ programClass : program.classes) {
-			if (programClass.equals(CoolUtils.MAIN_TYPE_STR)) {
+			if (programClass.name.equals(CoolUtils.MAIN_TYPE_STR)) {
 				foundMain = true;
 			}
 
@@ -140,7 +144,7 @@ public class Semantic {
 			for (AST.feature classFeature : programClass.features) {
 				if (classFeature instanceof AST.attr) {
 					AST.attr classAttr = (AST.attr) classFeature;
-					if (classAttrName2Type.containsKey(classAttr)) {
+					if (classAttrName2Type.containsKey(classAttr.name)) {
 						reportError(programClass.filename, programClass.lineNo,
 								"Attribute " + classAttr.name.toString() + " is redefined.");
 						foundError = true;
@@ -176,15 +180,15 @@ public class Semantic {
 								} else {
 									argTypeList.add(arg.typeid);
 								}
-								argTypeList.add(classMethod.typeid);
-								classMethodName2Args.put(classMethod.name, argTypeList);
-								if (programClass.name.equals(CoolUtils.MAIN_TYPE_STR)) {
-									foundMain = true;
-									if (classMethod.name.equals(CoolUtils.MAIN_FN_STR)) {
-										foundmain = true;
-										mainHasArgs = (argTypeList.size() == 1);
-									}
-								}
+							}
+						}
+						argTypeList.add(classMethod.typeid);
+						classMethodName2Args.put(classMethod.name, argTypeList);
+						if (programClass.name.equals(CoolUtils.MAIN_TYPE_STR)) {
+							foundMain = true;
+							if (classMethod.name.equals(CoolUtils.MAIN_FN_STR)) {
+								foundmain = true;
+								mainHasArgs = (argTypeList.size() == 1);
 							}
 						}
 					}
@@ -227,12 +231,15 @@ public class Semantic {
 
 		boolean foundError = false;
 		for (class_ programClass : program.classes) {
+			System.out.println("class detected:" + programClass.name);
 			for (AST.feature classFeature : programClass.features) {
-				if (classFeature instanceof AST.attr)
+				if (classFeature instanceof AST.attr){
+					System.out.println("attr detected: " + ((AST.attr)classFeature).name);
 					new TypeChecker((AST.attr) classFeature, classInfo, programClass);
-				else if (classFeature instanceof AST.method)
+				}else if (classFeature instanceof AST.method) {
+					System.out.println("method detected: " + ((AST.method) classFeature).name);
 					new TypeChecker((AST.method) classFeature, classInfo, programClass);
-				else {
+				}else {
 					reportError(programClass.filename, programClass.lineNo, "Reached a forbidden point.");
 					foundError = true;
 				}
@@ -246,7 +253,7 @@ public class Semantic {
 		while (programClassParent != null) {
 			class_ nextParentClass = classInfo.ClassNameMap.get(programClassParent);
 			for (AST.feature classFeatures : nextParentClass.features) {
-				if ((classFeatures instanceof AST.attr) && (((AST.attr) classFeatures).name.equals(classAttr))) {
+				if ((classFeatures instanceof AST.attr) && (((AST.attr) classFeatures).name.equals(classAttr.name))) {
 					return true;
 				}
 			}

@@ -24,9 +24,11 @@ class ClassInfo {
         addStringClass();
         addIntClass();
         addBoolClass();
+        createNewAttrInfo();
+        createNewMethodInfo();
     }
 
-    public void createNewObjectInfo() {
+    public void createNewAttrInfo() {
         attrInfo = new ScopeTable<Map<String, String>>();
         attrInfo.enterScope();
 

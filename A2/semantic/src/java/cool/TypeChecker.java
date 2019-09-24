@@ -5,6 +5,7 @@ import cool.AST.class_;
 import cool.AST;
 import cool.CoolUtils;
 import java.util.ArrayList;
+import cool.VariableMapping;
 
 class TypeChecker {
 
@@ -38,7 +39,7 @@ class TypeChecker {
                     String type = methodFormal.typeid;
                     variableMapping.add(new VariableMapping(name, type));
                 }
-                createNewObjectScope(classInfo.attrInfo, programClass, variableMapping);
+                CoolUtils.createNewObjectScope(classInfo.attrInfo, programClass, variableMapping);
                 TypeChecker(methodNode.body, classInfo, programClass);
                 classInfo.attrInfo.exitScope();
 
@@ -77,9 +78,9 @@ class TypeChecker {
                     createNewObjectScope(classInfo.attrInfo, programClass, variableMappings);
                     TypeCheck(attrNode.value, classInfo, programClass);
                     String T1 = attrNode.value.type;
-                    if (!classInfo.Graph.conforms(T1.toString(), T0.toString())) {
+                    if (!classInfo.Graph.conforms(T1, T0)) {
                         reportError(programClass.filename, programClass.lineNo,
-                                "Inferred type " + T1.toString() + " of initialization of attribute " + attrNode.name
+                                "Inferred type " + T1 + " of initialization of attribute " + attrNode.name
                                         + " does not conform to declared type " + attrNode.typeid);
                     }
                     classInfo.attrInfo.exitScope();
@@ -180,10 +181,10 @@ class TypeChecker {
 
     }
 
-    TypeChecker(AST.typecase node, ClassInfo classInfo, class_ programClass) {
+    TypeChecker(AST.typcase node, ClassInfo classInfo, class_ programClass) {
         TypeChecker(node.predicate, classInfo, programClass);
         Set<String> branchDeclerations = new HashSet<String>();
-        List<String> typecases = new LinkedList<String>();
+        List<String> typcases = new LinkedList<String>();
         for (AST.branch b : node.branchs) {
             ArrayList<Pair<String, String>> newBindings = new ArrayList<Pair<String, String>>();
             newBindings.add(new Pair<String, String>(b.name, b.type));
@@ -198,15 +199,15 @@ class TypeChecker {
             AST.expression exp = b.value;
             TypeChecker(exp, classInfo, programClass);
             String type_case = exp.type;
-            typecases.add(type_case);
+            typcases.add(type_case);
             classInfo.attrInfo.exitScope();
         }
-        if (typecases.isEmpty()) {
+        if (typcases.isEmpty()) {
             reportError(programClass.filename, programClass.lineNo, "atleast 1 type requires"); // check
         } else {
-            String case_type0 = typecases.get(0);
-            for (int i = 1; i < typecases.size(); i++) {
-                String type1 = typecases.get(i);
+            String case_type0 = typcases.get(0);
+            for (int i = 1; i < typcases.size(); i++) {
+                String type1 = typcases.get(i);
                 case_type0 = classInfo.Graph.LowestCommonAncestor(type1, type0);
                 // check again
             }
@@ -376,16 +377,88 @@ class TypeChecker {
     }
 
     TypeChecker() {
-
     }
 
-    private static class VariableMapping {
-        String leftString;
-        String rightString;
+    TypeChecker(AST.static_dispatch staticDispatchNode, ClassInfo classInfo, class_ programClass) {
+        TypeChecker(staticDispatchNode.caller, classInfo, programClass);
+        String T0 = staticDispatchNode.caller.type;
+        List<String> actualTypes = new ArrayList<String>();
+        for (AST.experssion nodeExpression : staticDispatchNode.actuals) {
+            TypeChecker(nodeExpression, classInfo, programClass);
+            actualTypes.add(expressionNode.type);
+        }
 
-        VariableMapping(String left, String right) {
-            leftString = left;
-            rightString = right;
+        if (!classInfo.graph.conforms(T0, node.typeid, CoolUtils.OBJECT_TYPE_STR)) {
+            reportError(programClass.filename, staticDispatchNode.lineNo,
+                    "Exrpession type " + T0 + " does not conform to declared " + "static dispatch type" + node.typeid);
+        }
+
+        Map<String, List<String>> method2Args = classInfo.methodInfo.lookUpGlobal(staticDispatchNode.typeid);
+        if (method2Args == null) {
+            reportError(classInfo.filename, staticDispatchNode.lineNo,
+                    "Class " + programClass.name + " was not found in " + "classInfo.methodInfo");
+            staticDispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
+        } else {
+            if (actualTypes.size() != formalTypes.size() - 1) {
+                reportError(programClass.filename, staticDispatchNode.lineNo,
+                        "Method " + staticDispatchNode.name + " of class " + programClass.name
+                                + " should be called with " + String.valueOf(formalTypes.size() - 1)
+                                + " but was called " + "with " + String.valueOf(actualTypes.size()) + " arguments.");
+                staticDispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
+            } else {
+                for (int i = 0; i < actualTypes.size(); i++) {
+                    if (!classInfo.graph.conforms(actualTypes.get(i), formalTypes.get(i), CoolUtils.OBJECT_TYPE_STR)) {
+                        reportError(classInfo.filename, staticDispatchNode.lineNo,
+                                "Inferred type " + actualTypes.get(i) + " does not " + "conform to formal type "
+                                        + formalTypes.get(i) + " for dispatch " + staticDispatchNode.name + " of "
+                                        + " Class " + programClass.name);
+                        staticDispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
+                        return;
+                    }
+                }
+                String T_return = formalTypes.get(formalType.size() - 1);
+                staticDispatchNode.type = T_return;
+            }
+        }
+    }
+
+    TypeChecker(AST.dispatch dispatchNode, ClassInfo classInfo, class_ programClass) {
+        TypeChecker(dispatchNode.caller, classInfo, programClass);
+        String T0 = dispatchNode.caller.type;
+        List<String> actualTypes = new ArrayList<String>();
+        for (AST.expression nodeExpression : dispatchNode.actuals) {
+            TypeChecker(nodeExpression, classInfo, programClass);
+            actualTypes.add(nodeExpression.type);
+        }
+        String T0_prime = T0;
+
+        Map<String, List<String>> method2Args = classInfo.methodInfo.lookUpGlobal(programClass.name);
+        if (method2Args == null) {
+            reportError(programClass.filename, dispatchNode.lineNo, "Method " + dispatchNode.name + " of Class "
+                    + programClass.name + " was not found in classInfo.methodInfo ");
+            dispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
+        } else {
+            List<String> formalTypes = getFormalList(dispatchNode.name, classInfo.classnameMap.get(T0_prime),
+                    classInfo);
+            if (formalTypes == null) {
+                reportError(programClass.filename, dispatchNode.lineNo,
+                        "Dispatch method was " + dispatchNode.name + " not found.");
+                dispatchNode.type = CollUtils.OBJECT_TYPE_STR;
+            } else {
+                for (int i = 0; i < actualTypes.size(); i++) {
+                    if (!classInfo.graph.conforms(actualTypes.get(i), formalTypes.get(i), CoolUtils.OBJECT_TYPE_STR)) {
+                        reportError(programClass.filename, dispatchNode.lineNo,
+                                "Method dispatch " + dispatchNode.name + " of class " + programClass.name
+                                        + " was called with argument number " + String.valueOf(i) + " with type "
+                                        + actualTypes.get(i) + " which does not conform with type + "
+                                        + formalTypes.get(i));
+                        dispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
+                        return;
+                    }
+                }
+                String T_return = formalTypes.get(formalTypes.size() - 1);
+                dispatchNode.type = T_return;
+            }
         }
     }
 }

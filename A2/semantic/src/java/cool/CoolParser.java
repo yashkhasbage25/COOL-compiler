@@ -21,43 +21,43 @@ public class CoolParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		ERROR=1, TYPEID=2, OBJECTID=3, BOOL_CONST=4, INT_CONST=5, STR_CONST=6, 
-		LPAREN=7, RPAREN=8, COLON=9, ATSYM=10, SEMICOLON=11, COMMA=12, PLUS=13, 
-		MINUS=14, STAR=15, SLASH=16, TILDE=17, LT=18, EQUALS=19, LBRACE=20, RBRACE=21, 
-		DOT=22, DARROW=23, LE=24, ASSIGN=25, CLASS=26, ELSE=27, FI=28, IF=29, 
-		IN=30, INHERITS=31, LET=32, LOOP=33, POOL=34, THEN=35, WHILE=36, CASE=37, 
-		ESAC=38, OF=39, NEW=40, ISVOID=41, NOT=42, WS=43, THEEND=44, SINGLE_COMMENT=45, 
-		COMMENT_CLOSE=46, CLOSED=47, COM_EOF=48, NEWLINE=49, ESC=50, ESC_NULL=51, 
-		STR_EOF=52, ERR1=53, ERR2=54, ERR3=55, LQUOTE=56, NL=57, TAB=58, BACKSPAC=59, 
+		ERROR=1, TYPEID=2, OBJECTID=3, BOOL_CONST=4, INT_CONST=5, STR_CONST=6,
+		LPAREN=7, RPAREN=8, COLON=9, ATSYM=10, SEMICOLON=11, COMMA=12, PLUS=13,
+		MINUS=14, STAR=15, SLASH=16, TILDE=17, LT=18, EQUALS=19, LBRACE=20, RBRACE=21,
+		DOT=22, DARROW=23, LE=24, ASSIGN=25, CLASS=26, ELSE=27, FI=28, IF=29,
+		IN=30, INHERITS=31, LET=32, LOOP=33, POOL=34, THEN=35, WHILE=36, CASE=37,
+		ESAC=38, OF=39, NEW=40, ISVOID=41, NOT=42, WS=43, THEEND=44, SINGLE_COMMENT=45,
+		COMMENT_CLOSE=46, CLOSED=47, COM_EOF=48, NEWLINE=49, ESC=50, ESC_NULL=51,
+		STR_EOF=52, ERR1=53, ERR2=54, ERR3=55, LQUOTE=56, NL=57, TAB=58, BACKSPAC=59,
 		LINEFEED=60, SLASHN=61, ESC_NL=62;
 	public static final int
-		RULE_program = 0, RULE_class_list = 1, RULE_class_ = 2, RULE_feature_list = 3, 
-		RULE_feature = 4, RULE_formal_list = 5, RULE_formal = 6, RULE_expression = 7, 
-		RULE_expression_list_actual = 8, RULE_expression_list = 9, RULE_case_list = 10, 
-		RULE_case_ = 11, RULE_let_looper = 12, RULE_star_slash = 13, RULE_plus_minus = 14, 
+		RULE_program = 0, RULE_class_list = 1, RULE_class_ = 2, RULE_feature_list = 3,
+		RULE_feature = 4, RULE_formal_list = 5, RULE_formal = 6, RULE_expression = 7,
+		RULE_expression_list_actual = 8, RULE_expression_list = 9, RULE_case_list = 10,
+		RULE_case_ = 11, RULE_let_looper = 12, RULE_star_slash = 13, RULE_plus_minus = 14,
 		RULE_lt_le_equals = 15;
 	public static final String[] ruleNames = {
-		"program", "class_list", "class_", "feature_list", "feature", "formal_list", 
-		"formal", "expression", "expression_list_actual", "expression_list", "case_list", 
+		"program", "class_list", "class_", "feature_list", "feature", "formal_list",
+		"formal", "expression", "expression_list_actual", "expression_list", "case_list",
 		"case_", "let_looper", "star_slash", "plus_minus", "lt_le_equals"
 	};
 
 	private static final String[] _LITERAL_NAMES = {
-		null, null, null, null, null, null, null, "'('", "')'", "':'", "'@'", 
-		"';'", "','", "'+'", "'-'", "'*'", "'/'", "'~'", "'<'", "'='", "'{'", 
-		"'}'", "'.'", "'=>'", "'<='", "'<-'", null, null, null, null, null, null, 
-		null, null, null, null, null, null, null, null, null, null, null, null, 
-		null, null, "'*)'", null, null, null, null, null, null, null, null, null, 
+		null, null, null, null, null, null, null, "'('", "')'", "':'", "'@'",
+		"';'", "','", "'+'", "'-'", "'*'", "'/'", "'~'", "'<'", "'='", "'{'",
+		"'}'", "'.'", "'=>'", "'<='", "'<-'", null, null, null, null, null, null,
+		null, null, null, null, null, null, null, null, null, null, null, null,
+		null, null, "'*)'", null, null, null, null, null, null, null, null, null,
 		null, null, "'\\t'", "'\\b'", "'\\f'", "'\\n'", "'\\\n'"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
-		null, "ERROR", "TYPEID", "OBJECTID", "BOOL_CONST", "INT_CONST", "STR_CONST", 
-		"LPAREN", "RPAREN", "COLON", "ATSYM", "SEMICOLON", "COMMA", "PLUS", "MINUS", 
-		"STAR", "SLASH", "TILDE", "LT", "EQUALS", "LBRACE", "RBRACE", "DOT", "DARROW", 
-		"LE", "ASSIGN", "CLASS", "ELSE", "FI", "IF", "IN", "INHERITS", "LET", 
-		"LOOP", "POOL", "THEN", "WHILE", "CASE", "ESAC", "OF", "NEW", "ISVOID", 
-		"NOT", "WS", "THEEND", "SINGLE_COMMENT", "COMMENT_CLOSE", "CLOSED", "COM_EOF", 
-		"NEWLINE", "ESC", "ESC_NULL", "STR_EOF", "ERR1", "ERR2", "ERR3", "LQUOTE", 
+		null, "ERROR", "TYPEID", "OBJECTID", "BOOL_CONST", "INT_CONST", "STR_CONST",
+		"LPAREN", "RPAREN", "COLON", "ATSYM", "SEMICOLON", "COMMA", "PLUS", "MINUS",
+		"STAR", "SLASH", "TILDE", "LT", "EQUALS", "LBRACE", "RBRACE", "DOT", "DARROW",
+		"LE", "ASSIGN", "CLASS", "ELSE", "FI", "IF", "IN", "INHERITS", "LET",
+		"LOOP", "POOL", "THEN", "WHILE", "CASE", "ESAC", "OF", "NEW", "ISVOID",
+		"NOT", "WS", "THEEND", "SINGLE_COMMENT", "COMMENT_CLOSE", "CLOSED", "COM_EOF",
+		"NEWLINE", "ESC", "ESC_NULL", "STR_EOF", "ERR1", "ERR2", "ERR3", "LQUOTE",
 		"NL", "TAB", "BACKSPAC", "LINEFEED", "SLASHN", "ESC_NL"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
@@ -146,7 +146,7 @@ public class CoolParser extends Parser {
 			match(EOF);
 
 											((ProgramContext)_localctx).value =  new AST.program(((ProgramContext)_localctx).cl.value, ((ProgramContext)_localctx).cl.value.get(0).lineNo);
-										
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -192,7 +192,7 @@ public class CoolParser extends Parser {
 			((Class_listContext)_localctx).c1 = class_();
 
 											((Class_listContext)_localctx).value =  new ArrayList<AST.class_>(); _localctx.value.add(((Class_listContext)_localctx).c1.value);
-										
+
 			setState(43);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -203,7 +203,7 @@ public class CoolParser extends Parser {
 				((Class_listContext)_localctx).c2 = class_();
 
 												_localctx.value.add(((Class_listContext)_localctx).c2.value);
-											
+
 				}
 				}
 				setState(45);
@@ -275,7 +275,7 @@ public class CoolParser extends Parser {
 				match(SEMICOLON);
 
 												((Class_Context)_localctx).value =  new AST.class_((((Class_Context)_localctx).TYPEID!=null?((Class_Context)_localctx).TYPEID.getText():null), filename,"Object", ((Class_Context)_localctx).fl.value,(((Class_Context)_localctx).TYPEID!=null?((Class_Context)_localctx).TYPEID.getLine():0));
-											
+
 				}
 				break;
 			case 2:
@@ -299,7 +299,7 @@ public class CoolParser extends Parser {
 				match(SEMICOLON);
 
 												((Class_Context)_localctx).value =  new AST.class_((((Class_Context)_localctx).t1!=null?((Class_Context)_localctx).t1.getText():null), filename ,(((Class_Context)_localctx).t2!=null?((Class_Context)_localctx).t2.getText():null), ((Class_Context)_localctx).fl.value,(((Class_Context)_localctx).t1!=null?((Class_Context)_localctx).t1.getLine():0));
-											
+
 				}
 				break;
 			}
@@ -338,7 +338,7 @@ public class CoolParser extends Parser {
 	public final Feature_listContext feature_list() throws RecognitionException {
 		Feature_listContext _localctx = new Feature_listContext(_ctx, getState());
 		enterRule(_localctx, 6, RULE_feature_list);
-		 ((Feature_listContext)_localctx).value =  new ArrayList<AST.feature>(); 
+		 ((Feature_listContext)_localctx).value =  new ArrayList<AST.feature>();
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
@@ -353,7 +353,7 @@ public class CoolParser extends Parser {
 				((Feature_listContext)_localctx).f1 = feature();
 
 												_localctx.value.add(((Feature_listContext)_localctx).f1.value);
-											
+
 				}
 				}
 				setState(73);
@@ -436,9 +436,9 @@ public class CoolParser extends Parser {
 				setState(83);
 				match(SEMICOLON);
 
-												((FeatureContext)_localctx).value =  new AST.method((((FeatureContext)_localctx).OBJECTID!=null?((FeatureContext)_localctx).OBJECTID.getText():null), ((FeatureContext)_localctx).formal_list.value, (((FeatureContext)_localctx).TYPEID!=null?((FeatureContext)_localctx).TYPEID.getText():null), 
+												((FeatureContext)_localctx).value =  new AST.method((((FeatureContext)_localctx).OBJECTID!=null?((FeatureContext)_localctx).OBJECTID.getText():null), ((FeatureContext)_localctx).formal_list.value, (((FeatureContext)_localctx).TYPEID!=null?((FeatureContext)_localctx).TYPEID.getText():null),
 																		((FeatureContext)_localctx).expression.value, (((FeatureContext)_localctx).OBJECTID!=null?((FeatureContext)_localctx).OBJECTID.getLine():0));
-											
+
 				}
 				break;
 			case 2:
@@ -458,7 +458,7 @@ public class CoolParser extends Parser {
 				match(SEMICOLON);
 
 									    		((FeatureContext)_localctx).value =  new AST.attr((((FeatureContext)_localctx).OBJECTID!=null?((FeatureContext)_localctx).OBJECTID.getText():null), (((FeatureContext)_localctx).TYPEID!=null?((FeatureContext)_localctx).TYPEID.getText():null), ((FeatureContext)_localctx).e1.value, (((FeatureContext)_localctx).OBJECTID!=null?((FeatureContext)_localctx).OBJECTID.getLine():0));
-									    	
+
 				}
 				break;
 			case 3:
@@ -475,7 +475,7 @@ public class CoolParser extends Parser {
 
 									    		((FeatureContext)_localctx).value =  new AST.attr((((FeatureContext)_localctx).OBJECTID!=null?((FeatureContext)_localctx).OBJECTID.getText():null), (((FeatureContext)_localctx).TYPEID!=null?((FeatureContext)_localctx).TYPEID.getText():null), new AST.no_expr((((FeatureContext)_localctx).OBJECTID!=null?((FeatureContext)_localctx).OBJECTID.getLine():0)),
 									    							(((FeatureContext)_localctx).OBJECTID!=null?((FeatureContext)_localctx).OBJECTID.getLine():0));
-									    	
+
 				}
 				break;
 			}
@@ -519,7 +519,7 @@ public class CoolParser extends Parser {
 	public final Formal_listContext formal_list() throws RecognitionException {
 		Formal_listContext _localctx = new Formal_listContext(_ctx, getState());
 		enterRule(_localctx, 10, RULE_formal_list);
-		((Formal_listContext)_localctx).value =  new ArrayList<AST.formal>(); 
+		((Formal_listContext)_localctx).value =  new ArrayList<AST.formal>();
 		int _la;
 		try {
 			setState(113);
@@ -531,7 +531,7 @@ public class CoolParser extends Parser {
 				((Formal_listContext)_localctx).f1 = formal();
 
 												_localctx.value.add(((Formal_listContext)_localctx).f1.value);
-											
+
 				setState(109);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
@@ -544,7 +544,7 @@ public class CoolParser extends Parser {
 					((Formal_listContext)_localctx).f2 = formal();
 
 													_localctx.value.add(((Formal_listContext)_localctx).f2.value);
-												
+
 					}
 					}
 					setState(111);
@@ -605,7 +605,7 @@ public class CoolParser extends Parser {
 			((FormalContext)_localctx).TYPEID = match(TYPEID);
 
 											((FormalContext)_localctx).value =  new AST.formal((((FormalContext)_localctx).OBJECTID!=null?((FormalContext)_localctx).OBJECTID.getText():null), (((FormalContext)_localctx).TYPEID!=null?((FormalContext)_localctx).TYPEID.getText():null), (((FormalContext)_localctx).OBJECTID!=null?((FormalContext)_localctx).OBJECTID.getLine():0));
-										
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -730,7 +730,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.neg(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e1.value.lineNo);
-											
+
 				}
 				break;
 			case 2:
@@ -742,7 +742,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.isvoid(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e1.value.lineNo);
-											
+
 				}
 				break;
 			case 3:
@@ -753,8 +753,8 @@ public class CoolParser extends Parser {
 				((ExpressionContext)_localctx).e1 = expression(8);
 
 												lastBool=false;
-												((ExpressionContext)_localctx).value =  new AST.comp(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e1.value.lineNo); 
-											
+												((ExpressionContext)_localctx).value =  new AST.comp(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e1.value.lineNo);
+
 				}
 				break;
 			case 4:
@@ -768,7 +768,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.assign((((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getText():null), ((ExpressionContext)_localctx).e1.value, (((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getLine():0));
-											
+
 				}
 				break;
 			case 5:
@@ -781,11 +781,11 @@ public class CoolParser extends Parser {
 				((ExpressionContext)_localctx).el = expression_list_actual();
 				setState(141);
 				match(RPAREN);
-				 
+
 												lastBool=false;
-												((ExpressionContext)_localctx).value =  new AST.dispatch(new AST.object("self", (((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getLine():0)), (((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getText():null), 
+												((ExpressionContext)_localctx).value =  new AST.dispatch(new AST.object("self", (((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getLine():0)), (((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getText():null),
 																		((ExpressionContext)_localctx).el.value, (((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getLine():0));
-											
+
 				}
 				break;
 			case 6:
@@ -804,10 +804,10 @@ public class CoolParser extends Parser {
 				((ExpressionContext)_localctx).e3 = expression(0);
 				setState(150);
 				match(FI);
-				 
+
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.cond(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e2.value, ((ExpressionContext)_localctx).e3.value, ((ExpressionContext)_localctx).e1.value.lineNo);
-											
+
 				}
 				break;
 			case 7:
@@ -825,7 +825,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.loop(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e2.value, ((ExpressionContext)_localctx).e1.value.lineNo);
-											
+
 				}
 				break;
 			case 8:
@@ -839,7 +839,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.block(((ExpressionContext)_localctx).els.value,(((ExpressionContext)_localctx).LBRACE!=null?((ExpressionContext)_localctx).LBRACE.getLine():0));
-											
+
 				}
 				break;
 			case 9:
@@ -857,7 +857,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.typcase(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).cl.value, (((ExpressionContext)_localctx).CASE!=null?((ExpressionContext)_localctx).CASE.getLine():0));
-											
+
 				}
 				break;
 			case 10:
@@ -869,7 +869,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.new_((((ExpressionContext)_localctx).TYPEID!=null?((ExpressionContext)_localctx).TYPEID.getText():null), (((ExpressionContext)_localctx).NEW!=null?((ExpressionContext)_localctx).NEW.getLine():0));
-											
+
 				}
 				break;
 			case 11:
@@ -883,7 +883,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  ((ExpressionContext)_localctx).e1.value;
-											
+
 				}
 				break;
 			case 12:
@@ -893,7 +893,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.object((((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getText():null), (((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getLine():0));
-											
+
 				}
 				break;
 			case 13:
@@ -903,7 +903,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.int_const(Integer.parseInt((((ExpressionContext)_localctx).INT_CONST!=null?((ExpressionContext)_localctx).INT_CONST.getText():null)), (((ExpressionContext)_localctx).INT_CONST!=null?((ExpressionContext)_localctx).INT_CONST.getLine():0));
-											
+
 				}
 				break;
 			case 14:
@@ -913,7 +913,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.string_const((((ExpressionContext)_localctx).STR_CONST!=null?((ExpressionContext)_localctx).STR_CONST.getText():null), (((ExpressionContext)_localctx).STR_CONST!=null?((ExpressionContext)_localctx).STR_CONST.getLine():0));
-											
+
 				}
 				break;
 			case 15:
@@ -923,7 +923,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  new AST.bool_const((((ExpressionContext)_localctx).BOOL_CONST!=null?((ExpressionContext)_localctx).BOOL_CONST.getText():null).charAt(0)=='t', (((ExpressionContext)_localctx).BOOL_CONST!=null?((ExpressionContext)_localctx).BOOL_CONST.getLine():0));
-											
+
 				}
 				break;
 			case 16:
@@ -935,7 +935,7 @@ public class CoolParser extends Parser {
 
 												lastBool=false;
 												((ExpressionContext)_localctx).value =  ((ExpressionContext)_localctx).ll.value;
-											
+
 				}
 				break;
 			}
@@ -966,7 +966,7 @@ public class CoolParser extends Parser {
 						          								lastBool=false;
 						          								((ExpressionContext)_localctx).value =  ((ExpressionContext)_localctx).s1.value==0?new AST.mul(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e2.value, ((ExpressionContext)_localctx).e1.value.lineNo):
 						          										new AST.divide(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e2.value, ((ExpressionContext)_localctx).e1.value.lineNo);
-						          							
+
 						}
 						break;
 					case 2:
@@ -985,7 +985,7 @@ public class CoolParser extends Parser {
 						          								lastBool=false;
 						          								((ExpressionContext)_localctx).value =  ((ExpressionContext)_localctx).s2.value==0?new AST.plus(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e2.value, ((ExpressionContext)_localctx).e1.value.lineNo):
 						          										new AST.sub(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e2.value, ((ExpressionContext)_localctx).e1.value.lineNo);
-						          							
+
 						}
 						break;
 					case 3:
@@ -1002,7 +1002,7 @@ public class CoolParser extends Parser {
 						((ExpressionContext)_localctx).s3 = lt_le_equals();
 						setState(207);
 						((ExpressionContext)_localctx).e2 = expression(10);
-						 
+
 						          								lastBool=true;
 						          								if ( ((ExpressionContext)_localctx).s3.value == 0 )
 						          									((ExpressionContext)_localctx).value =  new AST.lt(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e2.value,((ExpressionContext)_localctx).e1.value.lineNo);
@@ -1010,7 +1010,7 @@ public class CoolParser extends Parser {
 						          									((ExpressionContext)_localctx).value =  new AST.leq(((ExpressionContext)_localctx).e1.value,((ExpressionContext)_localctx).e2.value,((ExpressionContext)_localctx).e1.value.lineNo);
 						          								else
 						          									((ExpressionContext)_localctx).value =  new AST.eq(((ExpressionContext)_localctx).e1.value, ((ExpressionContext)_localctx).e2.value,((ExpressionContext)_localctx).e1.value.lineNo);
-						          							
+
 						}
 						break;
 					case 4:
@@ -1035,11 +1035,11 @@ public class CoolParser extends Parser {
 						((ExpressionContext)_localctx).el = expression_list_actual();
 						setState(217);
 						match(RPAREN);
-						 
+
 						          								lastBool=false;
-						          								((ExpressionContext)_localctx).value =  new AST.static_dispatch(((ExpressionContext)_localctx).e1.value, (((ExpressionContext)_localctx).TYPEID!=null?((ExpressionContext)_localctx).TYPEID.getText():null), (((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getText():null), ((ExpressionContext)_localctx).el.value, 
+						          								((ExpressionContext)_localctx).value =  new AST.static_dispatch(((ExpressionContext)_localctx).e1.value, (((ExpressionContext)_localctx).TYPEID!=null?((ExpressionContext)_localctx).TYPEID.getText():null), (((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getText():null), ((ExpressionContext)_localctx).el.value,
 						          																((ExpressionContext)_localctx).e1.value.lineNo);
-						          							
+
 						}
 						break;
 					case 5:
@@ -1060,14 +1060,14 @@ public class CoolParser extends Parser {
 						((ExpressionContext)_localctx).el = expression_list_actual();
 						setState(225);
 						match(RPAREN);
-						 
+
 						          								lastBool=false;
 						          								((ExpressionContext)_localctx).value =  new AST.dispatch(((ExpressionContext)_localctx).e1.value, (((ExpressionContext)_localctx).OBJECTID!=null?((ExpressionContext)_localctx).OBJECTID.getText():null), ((ExpressionContext)_localctx).el.value, ((ExpressionContext)_localctx).e1.value.lineNo);
-						          							
+
 						}
 						break;
 					}
-					} 
+					}
 				}
 				setState(232);
 				_errHandler.sync(this);
@@ -1114,7 +1114,7 @@ public class CoolParser extends Parser {
 	public final Expression_list_actualContext expression_list_actual() throws RecognitionException {
 		Expression_list_actualContext _localctx = new Expression_list_actualContext(_ctx, getState());
 		enterRule(_localctx, 16, RULE_expression_list_actual);
-		 ((Expression_list_actualContext)_localctx).value =  new ArrayList<AST.expression>(); 
+		 ((Expression_list_actualContext)_localctx).value =  new ArrayList<AST.expression>();
 		int _la;
 		try {
 			setState(245);
@@ -1139,7 +1139,7 @@ public class CoolParser extends Parser {
 				((Expression_list_actualContext)_localctx).e1 = expression(0);
 
 												_localctx.value.add(((Expression_list_actualContext)_localctx).e1.value);
-											
+
 				setState(241);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
@@ -1152,7 +1152,7 @@ public class CoolParser extends Parser {
 					((Expression_list_actualContext)_localctx).e2 = expression(0);
 
 													_localctx.value.add(((Expression_list_actualContext)_localctx).e2.value);
-												
+
 					}
 					}
 					setState(243);
@@ -1208,12 +1208,12 @@ public class CoolParser extends Parser {
 	public final Expression_listContext expression_list() throws RecognitionException {
 		Expression_listContext _localctx = new Expression_listContext(_ctx, getState());
 		enterRule(_localctx, 18, RULE_expression_list);
-		 ((Expression_listContext)_localctx).value =  new ArrayList<AST.expression>(); 
+		 ((Expression_listContext)_localctx).value =  new ArrayList<AST.expression>();
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(251); 
+			setState(251);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
@@ -1225,10 +1225,10 @@ public class CoolParser extends Parser {
 				match(SEMICOLON);
 
 												_localctx.value.add(((Expression_listContext)_localctx).e1.value);
-											
+
 				}
 				}
-				setState(253); 
+				setState(253);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << OBJECTID) | (1L << BOOL_CONST) | (1L << INT_CONST) | (1L << STR_CONST) | (1L << LPAREN) | (1L << TILDE) | (1L << LBRACE) | (1L << IF) | (1L << LET) | (1L << WHILE) | (1L << CASE) | (1L << NEW) | (1L << ISVOID) | (1L << NOT))) != 0) );
@@ -1268,12 +1268,12 @@ public class CoolParser extends Parser {
 	public final Case_listContext case_list() throws RecognitionException {
 		Case_listContext _localctx = new Case_listContext(_ctx, getState());
 		enterRule(_localctx, 20, RULE_case_list);
-		 ((Case_listContext)_localctx).value =  new ArrayList<AST.branch>(); 
+		 ((Case_listContext)_localctx).value =  new ArrayList<AST.branch>();
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(258); 
+			setState(258);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
@@ -1283,10 +1283,10 @@ public class CoolParser extends Parser {
 				((Case_listContext)_localctx).c1 = case_();
 
 												_localctx.value.add(((Case_listContext)_localctx).c1.value);
-											
+
 				}
 				}
-				setState(260); 
+				setState(260);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( _la==OBJECTID );
@@ -1347,7 +1347,7 @@ public class CoolParser extends Parser {
 			match(SEMICOLON);
 
 											((Case_Context)_localctx).value =  new AST.branch((((Case_Context)_localctx).OBJECTID!=null?((Case_Context)_localctx).OBJECTID.getText():null), (((Case_Context)_localctx).TYPEID!=null?((Case_Context)_localctx).TYPEID.getText():null), ((Case_Context)_localctx).e1.value, (((Case_Context)_localctx).OBJECTID!=null?((Case_Context)_localctx).OBJECTID.getLine():0));
-										
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -1413,10 +1413,10 @@ public class CoolParser extends Parser {
 				match(COMMA);
 				setState(274);
 				((Let_looperContext)_localctx).ll = let_looper();
-				 
-												((Let_looperContext)_localctx).value =  new AST.let((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getText():null), (((Let_looperContext)_localctx).TYPEID!=null?((Let_looperContext)_localctx).TYPEID.getText():null), new AST.no_expr((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getLine():0)), 
+
+												((Let_looperContext)_localctx).value =  new AST.let((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getText():null), (((Let_looperContext)_localctx).TYPEID!=null?((Let_looperContext)_localctx).TYPEID.getText():null), new AST.no_expr((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getLine():0)),
 																	((Let_looperContext)_localctx).ll.value, (((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getLine():0));
-											
+
 				}
 				break;
 			case 2:
@@ -1436,10 +1436,10 @@ public class CoolParser extends Parser {
 				match(COMMA);
 				setState(283);
 				((Let_looperContext)_localctx).ll = let_looper();
-				 
-									    		((Let_looperContext)_localctx).value =  new AST.let((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getText():null), (((Let_looperContext)_localctx).TYPEID!=null?((Let_looperContext)_localctx).TYPEID.getText():null), ((Let_looperContext)_localctx).e1.value, ((Let_looperContext)_localctx).ll.value, 
+
+									    		((Let_looperContext)_localctx).value =  new AST.let((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getText():null), (((Let_looperContext)_localctx).TYPEID!=null?((Let_looperContext)_localctx).TYPEID.getText():null), ((Let_looperContext)_localctx).e1.value, ((Let_looperContext)_localctx).ll.value,
 									    							(((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getLine():0));
-									    	
+
 				}
 				break;
 			case 3:
@@ -1455,10 +1455,10 @@ public class CoolParser extends Parser {
 				match(IN);
 				setState(290);
 				((Let_looperContext)_localctx).e1 = expression(0);
-				 
-									    		((Let_looperContext)_localctx).value =  new AST.let((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getText():null), (((Let_looperContext)_localctx).TYPEID!=null?((Let_looperContext)_localctx).TYPEID.getText():null), new AST.no_expr((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getLine():0)), 
+
+									    		((Let_looperContext)_localctx).value =  new AST.let((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getText():null), (((Let_looperContext)_localctx).TYPEID!=null?((Let_looperContext)_localctx).TYPEID.getText():null), new AST.no_expr((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getLine():0)),
 									    							((Let_looperContext)_localctx).e1.value, (((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getLine():0));
-									    	
+
 				}
 				break;
 			case 4:
@@ -1478,10 +1478,10 @@ public class CoolParser extends Parser {
 				match(IN);
 				setState(299);
 				((Let_looperContext)_localctx).e2 = expression(0);
-				 
-									    		((Let_looperContext)_localctx).value =  new AST.let((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getText():null), (((Let_looperContext)_localctx).TYPEID!=null?((Let_looperContext)_localctx).TYPEID.getText():null), ((Let_looperContext)_localctx).e1.value, ((Let_looperContext)_localctx).e2.value, 
+
+									    		((Let_looperContext)_localctx).value =  new AST.let((((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getText():null), (((Let_looperContext)_localctx).TYPEID!=null?((Let_looperContext)_localctx).TYPEID.getText():null), ((Let_looperContext)_localctx).e1.value, ((Let_looperContext)_localctx).e2.value,
 									    							(((Let_looperContext)_localctx).OBJECTID!=null?((Let_looperContext)_localctx).OBJECTID.getLine():0));
-									    	
+
 				}
 				break;
 			}
@@ -1523,7 +1523,7 @@ public class CoolParser extends Parser {
 				{
 				setState(304);
 				match(STAR);
-				((Star_slashContext)_localctx).value =  0; 
+				((Star_slashContext)_localctx).value =  0;
 				}
 				break;
 			case SLASH:
@@ -1531,7 +1531,7 @@ public class CoolParser extends Parser {
 				{
 				setState(306);
 				match(SLASH);
-				((Star_slashContext)_localctx).value =  1; 
+				((Star_slashContext)_localctx).value =  1;
 				}
 				break;
 			default:
@@ -1575,7 +1575,7 @@ public class CoolParser extends Parser {
 				{
 				setState(310);
 				match(PLUS);
-				((Plus_minusContext)_localctx).value =  0; 
+				((Plus_minusContext)_localctx).value =  0;
 				}
 				break;
 			case MINUS:
@@ -1583,7 +1583,7 @@ public class CoolParser extends Parser {
 				{
 				setState(312);
 				match(MINUS);
-				((Plus_minusContext)_localctx).value =  1; 
+				((Plus_minusContext)_localctx).value =  1;
 				}
 				break;
 			default:
@@ -1628,7 +1628,7 @@ public class CoolParser extends Parser {
 				{
 				setState(316);
 				match(LT);
-				((Lt_le_equalsContext)_localctx).value =  0; 
+				((Lt_le_equalsContext)_localctx).value =  0;
 				}
 				break;
 			case LE:
@@ -1636,7 +1636,7 @@ public class CoolParser extends Parser {
 				{
 				setState(318);
 				match(LE);
-				((Lt_le_equalsContext)_localctx).value =  1; 
+				((Lt_le_equalsContext)_localctx).value =  1;
 				}
 				break;
 			case EQUALS:
@@ -1644,7 +1644,7 @@ public class CoolParser extends Parser {
 				{
 				setState(320);
 				match(EQUALS);
-				((Lt_le_equalsContext)_localctx).value =  2; 
+				((Lt_le_equalsContext)_localctx).value =  2;
 				}
 				break;
 			default:

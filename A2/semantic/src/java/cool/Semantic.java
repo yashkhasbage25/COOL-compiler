@@ -23,6 +23,7 @@ public class Semantic {
 
 	ScopeTable<AST.attr> scopeTable = new ScopeTable<AST.attr>();
 	ClassInfo classInfo = new ClassInfo();
+	static boolean typeCheckErrorFlag = false;
 
 	public Semantic(AST.program program) {
 
@@ -37,11 +38,14 @@ public class Semantic {
 		analyzeClassFeatures(program);
 
 		recurseTypeChecker(program);
+		errorFlag = typeCheckErrorFlag;
 	}
 
 	private void runCycleReporter(AST.program program) {
-
-	};
+		boolean flag=classInfo.Graph.cyclePresent();
+		if(flag)
+			reportError(program.classes.get(0).filename, 0, "Cycle detected");
+	}
 
 	private void collectAndValidateClasses(AST.program program) {
 

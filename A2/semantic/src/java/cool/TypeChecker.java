@@ -9,12 +9,10 @@ import cool.VariableMapping;
 
 class TypeChecker {
 
-    boolean errorFlag = false;
-
     private void reportError(String filename, int lineNo, String error) {
-        errorFlag = true;
-        System.err.println(filename + ":" + lineNo + ": " + error);
-    }
+		Semantic.typeCheckErrorFlag = true;
+		System.err.println(filename + ":" + lineNo + ": " + error);
+	}
 
     private boolean nonIntegerExpression(AST.expression e1, AST.expression e2) {
         return !CoolUtils.INT_TYPE_STR.equals(e1.type) || !CoolUtils.INT_TYPE_STR.equals(e2.type);

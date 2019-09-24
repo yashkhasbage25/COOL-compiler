@@ -69,8 +69,8 @@ public class InheritanceGraph {
 	}
 
 	public void addEdge(String start, String end) {
-		Vertex u = getVertex(start);
-		Vertex v = getVertex(end);
+		Vertex u = new Vertex(start);
+		Vertex v = new Vertex(end);
 		addVertexToMap(start, u);
 		addVertexToMap(end, v);
 		u.add_neighbour(v);

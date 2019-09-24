@@ -17,14 +17,14 @@ public class CoolLexer extends Lexer {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		ERROR=1, TYPEID=2, OBJECTID=3, BOOL_CONST=4, INT_CONST=5, STR_CONST=6, 
-		LPAREN=7, RPAREN=8, COLON=9, ATSYM=10, SEMICOLON=11, COMMA=12, PLUS=13, 
-		MINUS=14, STAR=15, SLASH=16, TILDE=17, LT=18, EQUALS=19, LBRACE=20, RBRACE=21, 
-		DOT=22, DARROW=23, LE=24, ASSIGN=25, CLASS=26, ELSE=27, FI=28, IF=29, 
-		IN=30, INHERITS=31, LET=32, LOOP=33, POOL=34, THEN=35, WHILE=36, CASE=37, 
-		ESAC=38, OF=39, NEW=40, ISVOID=41, NOT=42, WS=43, THEEND=44, SINGLE_COMMENT=45, 
-		COMMENT_CLOSE=46, CLOSED=47, COM_EOF=48, NEWLINE=49, ESC=50, ESC_NULL=51, 
-		STR_EOF=52, ERR1=53, ERR2=54, ERR3=55, LQUOTE=56, NL=57, TAB=58, BACKSPAC=59, 
+		ERROR=1, TYPEID=2, OBJECTID=3, BOOL_CONST=4, INT_CONST=5, STR_CONST=6,
+		LPAREN=7, RPAREN=8, COLON=9, ATSYM=10, SEMICOLON=11, COMMA=12, PLUS=13,
+		MINUS=14, STAR=15, SLASH=16, TILDE=17, LT=18, EQUALS=19, LBRACE=20, RBRACE=21,
+		DOT=22, DARROW=23, LE=24, ASSIGN=25, CLASS=26, ELSE=27, FI=28, IF=29,
+		IN=30, INHERITS=31, LET=32, LOOP=33, POOL=34, THEN=35, WHILE=36, CASE=37,
+		ESAC=38, OF=39, NEW=40, ISVOID=41, NOT=42, WS=43, THEEND=44, SINGLE_COMMENT=45,
+		COMMENT_CLOSE=46, CLOSED=47, COM_EOF=48, NEWLINE=49, ESC=50, ESC_NULL=51,
+		STR_EOF=52, ERR1=53, ERR2=54, ERR3=55, LQUOTE=56, NL=57, TAB=58, BACKSPAC=59,
 		LINEFEED=60, SLASHN=61, ESC_NL=62;
 	public static final int COMMENT = 1;
 	public static final int STR = 2;
@@ -34,33 +34,33 @@ public class CoolLexer extends Lexer {
 	};
 
 	public static final String[] ruleNames = {
-		"LPAREN", "RPAREN", "COLON", "ATSYM", "SEMICOLON", "COMMA", "PLUS", "MINUS", 
-		"STAR", "SLASH", "TILDE", "LT", "EQUALS", "LBRACE", "RBRACE", "DOT", "DARROW", 
-		"LE", "ASSIGN", "CLASS", "ELSE", "BOOL_CONST", "FI", "IF", "IN", "INHERITS", 
-		"ISVOID", "LET", "LOOP", "POOL", "THEN", "WHILE", "CASE", "ESAC", "NEW", 
-		"NOT", "OF", "TYPEID", "OBJECTID", "INT_CONST", "WS", "THEEND", "LQUOTE", 
-		"SINGLE_COMMENT", "COMMENT_OPEN", "COMMENT_CLOSE", "ERROR", "OPEN", "CLOSED", 
-		"COM_EOF", "NL", "ANY", "STR_CONST", "NEWLINE", "ESC", "ESC_NULL", "STR_EOF", 
-		"TAB", "BACKSPAC", "LINEFEED", "SLASHN", "ESC_NL", "ESC_CHAR", "TEXT", 
+		"LPAREN", "RPAREN", "COLON", "ATSYM", "SEMICOLON", "COMMA", "PLUS", "MINUS",
+		"STAR", "SLASH", "TILDE", "LT", "EQUALS", "LBRACE", "RBRACE", "DOT", "DARROW",
+		"LE", "ASSIGN", "CLASS", "ELSE", "BOOL_CONST", "FI", "IF", "IN", "INHERITS",
+		"ISVOID", "LET", "LOOP", "POOL", "THEN", "WHILE", "CASE", "ESAC", "NEW",
+		"NOT", "OF", "TYPEID", "OBJECTID", "INT_CONST", "WS", "THEEND", "LQUOTE",
+		"SINGLE_COMMENT", "COMMENT_OPEN", "COMMENT_CLOSE", "ERROR", "OPEN", "CLOSED",
+		"COM_EOF", "NL", "ANY", "STR_CONST", "NEWLINE", "ESC", "ESC_NULL", "STR_EOF",
+		"TAB", "BACKSPAC", "LINEFEED", "SLASHN", "ESC_NL", "ESC_CHAR", "TEXT",
 		"ERR1", "ERR2", "ERR3"
 	};
 
 	private static final String[] _LITERAL_NAMES = {
-		null, null, null, null, null, null, null, "'('", "')'", "':'", "'@'", 
-		"';'", "','", "'+'", "'-'", "'*'", "'/'", "'~'", "'<'", "'='", "'{'", 
-		"'}'", "'.'", "'=>'", "'<='", "'<-'", null, null, null, null, null, null, 
-		null, null, null, null, null, null, null, null, null, null, null, null, 
-		null, null, "'*)'", null, null, null, null, null, null, null, null, null, 
+		null, null, null, null, null, null, null, "'('", "')'", "':'", "'@'",
+		"';'", "','", "'+'", "'-'", "'*'", "'/'", "'~'", "'<'", "'='", "'{'",
+		"'}'", "'.'", "'=>'", "'<='", "'<-'", null, null, null, null, null, null,
+		null, null, null, null, null, null, null, null, null, null, null, null,
+		null, null, "'*)'", null, null, null, null, null, null, null, null, null,
 		null, null, "'\\t'", "'\\b'", "'\\f'", "'\\n'", "'\\\n'"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
-		null, "ERROR", "TYPEID", "OBJECTID", "BOOL_CONST", "INT_CONST", "STR_CONST", 
-		"LPAREN", "RPAREN", "COLON", "ATSYM", "SEMICOLON", "COMMA", "PLUS", "MINUS", 
-		"STAR", "SLASH", "TILDE", "LT", "EQUALS", "LBRACE", "RBRACE", "DOT", "DARROW", 
-		"LE", "ASSIGN", "CLASS", "ELSE", "FI", "IF", "IN", "INHERITS", "LET", 
-		"LOOP", "POOL", "THEN", "WHILE", "CASE", "ESAC", "OF", "NEW", "ISVOID", 
-		"NOT", "WS", "THEEND", "SINGLE_COMMENT", "COMMENT_CLOSE", "CLOSED", "COM_EOF", 
-		"NEWLINE", "ESC", "ESC_NULL", "STR_EOF", "ERR1", "ERR2", "ERR3", "LQUOTE", 
+		null, "ERROR", "TYPEID", "OBJECTID", "BOOL_CONST", "INT_CONST", "STR_CONST",
+		"LPAREN", "RPAREN", "COLON", "ATSYM", "SEMICOLON", "COMMA", "PLUS", "MINUS",
+		"STAR", "SLASH", "TILDE", "LT", "EQUALS", "LBRACE", "RBRACE", "DOT", "DARROW",
+		"LE", "ASSIGN", "CLASS", "ELSE", "FI", "IF", "IN", "INHERITS", "LET",
+		"LOOP", "POOL", "THEN", "WHILE", "CASE", "ESAC", "OF", "NEW", "ISVOID",
+		"NOT", "WS", "THEEND", "SINGLE_COMMENT", "COMMENT_CLOSE", "CLOSED", "COM_EOF",
+		"NEWLINE", "ESC", "ESC_NULL", "STR_EOF", "ERR1", "ERR2", "ERR3", "LQUOTE",
 		"NL", "TAB", "BACKSPAC", "LINEFEED", "SLASHN", "ESC_NL"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
@@ -232,7 +232,7 @@ public class CoolLexer extends Lexer {
 			 				skip();
 						else
 							more();
-					
+
 			break;
 		}
 	}
@@ -253,7 +253,7 @@ public class CoolLexer extends Lexer {
 	private void NEWLINE_action(RuleContext _localctx, int actionIndex) {
 		switch (actionIndex) {
 		case 6:
-			 reportError("Unterminated string constant"); 
+			 reportError("Unterminated string constant");
 			break;
 		}
 	}

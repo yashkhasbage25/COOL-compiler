@@ -40,7 +40,7 @@ class TypeChecker {
                     variableMapping.add(new VariableMapping(name, type));
                 }
                 CoolUtils.createNewObjectScope(classInfo.attrInfo, programClass, variableMapping);
-                TypeChecker(methodNode.body, classInfo, programClass);
+                new TypeChecker(methodNode.body, classInfo, programClass);
                 classInfo.attrInfo.exitScope();
 
                 String T0_prime_string = methodNode.body.type;
@@ -75,8 +75,8 @@ class TypeChecker {
                 if (!(attrNode.value instanceof AST.no_expr)) {
                     List<VariableMapping> variableMappings = new ArrayList<VariableMapping>();
 
-                    createNewObjectScope(classInfo.attrInfo, programClass, variableMappings);
-                    TypeCheck(attrNode.value, classInfo, programClass);
+                    CoolUtils.createNewObjectScope(classInfo.attrInfo, programClass, variableMappings);
+                    new TypeChecker(attrNode.value, classInfo, programClass);
                     String T1 = attrNode.value.type;
                     if (!classInfo.Graph.conforms(T1, T0)) {
                         reportError(programClass.filename, programClass.lineNo,
@@ -91,18 +91,18 @@ class TypeChecker {
 
     TypeChecker(AST.block node, ClassInfo classInfo, class_ programClass) {
         for (AST.expression exp : node.l1) {
-            TypeChecker(exp, classInfo, programClass);
+            new TypeChecker(exp, classInfo, programClass);
             node.type = exp.type;
         }
     }
 
     TypeChecker(AST.assign node, ClassInfo classInfo, class_ programClass) {
-        String type = Attrtype(node.name, classInfo, programClass);
+        String type = CoolUtils.attrType(node.name, programClass, classInfo);
         if (type == null) {
-            reportError(programClass.filename, programClass.lineNo, "Undefined Identifier :", node.name);
+            reportError(programClass.filename, programClass.lineNo, "Undefined Identifier :" + node.name);
             node.type = CoolUtils.OBJECT_TYPE_STR;
         } else {
-            TypeChecker(node.e1, classInfo, programClass);
+            new TypeChecker(node.e1, classInfo, programClass);
             String type_prime = node.e1.type;
             // if(classInfo.)
         }
@@ -111,84 +111,84 @@ class TypeChecker {
     TypeChecker(AST.expression node, ClassInfo classInfo, class_ programClass) {
 
         if (node instanceof AST.static_dispatch)
-            TypeChecker((AST.static_dispatch) node, classInfo, programClass);
+            new TypeChecker((AST.static_dispatch) node, classInfo, programClass);
 
         else if (node instanceof AST.dispatch)
-            TypeChecker((AST.dispatch) node, classInfo, programClass);
+            new TypeChecker((AST.dispatch) node, classInfo, programClass);
 
-        if (node instanceof AST.assign)
-            TypeChecker((AST.assign) node, classInfo, programClass);
+        else if (node instanceof AST.assign)
+            new TypeChecker((AST.assign) node, classInfo, programClass);
 
         else if (node instanceof AST.cond)
-            TypeChecker((AST.cond) node, classInfo, programClass);
+            new TypeChecker((AST.cond) node, classInfo, programClass);
 
         else if (node instanceof AST.block)
-            TypeChecker((AST.block) node, classInfo, programClass);
+            new TypeChecker((AST.block) node, classInfo, programClass);
 
         else if (node instanceof AST.loop)
-            TypeChecker((AST.loop) node, classInfo, programClass);
+            new TypeChecker((AST.loop) node, classInfo, programClass);
 
         else if (node instanceof AST.let)
-            TypeChecker((AST.let) node, classInfo, programClass);
+            new TypeChecker((AST.let) node, classInfo, programClass);
 
         else if (node instanceof AST.typcase)
-            TypeChecker((AST.typcase) node, classInfo, programClass);
+            new TypeChecker((AST.typcase) node, classInfo, programClass);
 
         else if (node instanceof AST.new_)
-            TypeChecker((AST.new_) node, classInfo, programClass);
+            new TypeChecker((AST.new_) node, classInfo, programClass);
 
         else if (node instanceof AST.isvoid)
-            TypeChecker((AST.isvoid) node, classInfo, programClass);
+            new TypeChecker((AST.isvoid) node, classInfo, programClass);
 
         else if (node instanceof AST.plus)
-            TypeChecker((AST.plus) node, classInfo, programClass);
+            new TypeChecker((AST.plus) node, classInfo, programClass);
 
         else if (node instanceof AST.sub)
-            TypeChecker((AST.sub) node, classInfo, programClass);
+            new TypeChecker((AST.sub) node, classInfo, programClass);
 
         else if (node instanceof AST.mul)
-            TypeChecker((AST.mul) node, classInfo, programClass);
+            new TypeChecker((AST.mul) node, classInfo, programClass);
 
         else if (node instanceof AST.divide)
-            TypeChecker((AST.divide) node, classInfo, programClass);
+            new TypeChecker((AST.divide) node, classInfo, programClass);
 
         else if (node instanceof AST.comp)
-            TypeChecker((AST.comp) node, classInfo, programClass);
+            new TypeChecker((AST.comp) node, classInfo, programClass);
 
         else if (node instanceof AST.lt)
-            TypeChecker((AST.lt) node, classInfo, programClass);
+            new TypeChecker((AST.lt) node, classInfo, programClass);
 
         else if (node instanceof AST.leq)
-            TypeChecker((AST.leq) node, classInfo, programClass);
+            new TypeChecker((AST.leq) node, classInfo, programClass);
 
         else if (node instanceof AST.eq)
-            TypeChecker((AST.eq) node, classInfo, programClass);
+            new TypeChecker((AST.eq) node, classInfo, programClass);
 
         else if (node instanceof AST.neg)
-            TypeChecker((AST.neg) node, classInfo, programClass);
+            new TypeChecker((AST.neg) node, classInfo, programClass);
 
         else if (node instanceof AST.object)
-            TypeChecker((AST.object) node, classInfo, programClass);
+            new TypeChecker((AST.object) node, classInfo, programClass);
 
         else if (node instanceof AST.bool_const)
-            TypeChecker((AST.bool_const) node, classInfo, programClass);
+            new TypeChecker((AST.bool_const) node, classInfo, programClass);
 
         else if (node instanceof AST.int_const)
-            TypeChecker((AST.int_const) node, classInfo, programClass);
+            new TypeChecker((AST.int_const) node, classInfo, programClass);
 
         else if (node instanceof AST.string_const)
-            TypeChecker((AST.string_const) node, classInfo, programClass);
+            new TypeChecker((AST.string_const) node, classInfo, programClass);
 
     }
 
     TypeChecker(AST.typcase node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.predicate, classInfo, programClass);
+        new TypeChecker(node.predicate, classInfo, programClass);
         Set<String> branchDeclerations = new HashSet<String>();
         List<String> typcases = new LinkedList<String>();
-        for (AST.branch b : node.branchs) {
-            ArrayList<Pair<String, String>> newBindings = new ArrayList<Pair<String, String>>();
-            newBindings.add(new Pair<String, String>(b.name, b.type));
-            updateObjectEnv(classInfo.attrInfo, classInfo, newBindings);
+        for (AST.branch b : node.branches) {
+            ArrayList<VariableMapping> variableMapping = new ArrayList<VariableMapping>();
+            variableMapping.add(new VariableMapping(b.name, b.type));
+            CoolUtils.createNewObjectScope(classInfo.attrInfo, programClass, variableMapping);
             if (branchDeclerations.contains(b.type)) {
                 reportError(programClass.filename, programClass.lineNo, "Same branch exists"); // check
                 node.type = "Object";
@@ -197,7 +197,7 @@ class TypeChecker {
             }
 
             AST.expression exp = b.value;
-            TypeChecker(exp, classInfo, programClass);
+            new TypeChecker(exp, classInfo, programClass);
             String type_case = exp.type;
             typcases.add(type_case);
             classInfo.attrInfo.exitScope();
@@ -208,7 +208,7 @@ class TypeChecker {
             String case_type0 = typcases.get(0);
             for (int i = 1; i < typcases.size(); i++) {
                 String type1 = typcases.get(i);
-                case_type0 = classInfo.Graph.LowestCommonAncestor(type1, type0);
+                case_type0 = classInfo.Graph.LowestCommonAncestor(type1, case_type0);
                 // check again
             }
             node.type = case_type0;
@@ -220,47 +220,47 @@ class TypeChecker {
         String type_decl = node.typeid;
         T0_prime_string = type_decl; // both are Same
         if (!(node.value instanceof AST.no_expr)) {
-            TypeChecker(node.value, classInfo, programClass);
+            new TypeChecker(node.value, classInfo, programClass);
             String T1 = node.value.type;
             if (!classInfo.Graph.conforms(T1, T0_prime_string)) {
                 reportError(programClass.filename, programClass.lineNo, "Infered type does not conform to identifier");
             }
         }
-        ArrayList<Pair<String, String>> newBindings = new ArrayList<Pair<String, String>>();
-        newBindings.add(new Pair<String, String>(node.name, type_decl));
-        updateObjectEnv(c.objectEnv, curr, newBindings);
-        TypeChecker(node.body, classInfo, programClass);
+        ArrayList<VariableMapping> variableMapping = new ArrayList<VariableMapping>();
+        variableMapping.add(new VariableMapping(node.name, type_decl));
+        CoolUtils.createNewObjectScope(classInfo.attrInfo, programClass, variableMapping);
+        new TypeChecker(node.body, classInfo, programClass);
         node.type = node.body.type;
         classInfo.attrInfo.exitScope();
     }
 
     TypeChecker(AST.cond node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.predicate, classInfo, programClass);
+        new TypeChecker(node.predicate, classInfo, programClass);
         if (!node.predicate.type.equals(CoolUtils.BOOL_TYPE_STR)) {
             reportError(programClass.filename, programClass.lineNo, "Predicate of conditional must be of Bool type");
             node.type = CoolUtils.OBJECT_TYPE_STR;
         }
-        TypeChecker(node.ifbody, classInfo, programClass);
-        TypeChecker(node.elsebody, classInfo, programClass);
+        new TypeChecker(node.ifbody, classInfo, programClass);
+        new TypeChecker(node.elsebody, classInfo, programClass);
         node.type = classInfo.Graph.LowestCommonAncestor(node.ifbody.type, node.elsebody.type); // check again
     }
 
     TypeChecker(AST.loop node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.predicate, classInfo, programClass);
+        new TypeChecker(node.predicate, classInfo, programClass);
         if (!node.predicate.type.equals(CoolUtils.BOOL_TYPE_STR)) {
             reportError(programClass.filename, programClass.lineNo,
                     "Infered Predicate of while loop must be of Bool type");
             node.type = CoolUtils.OBJECT_TYPE_STR;
         } else {
-            TypeChecker(node.body, classInfo, programClass);
+            new TypeChecker(node.body, classInfo, programClass);
             node.type = CoolUtils.OBJECT_TYPE_STR;
         }
 
     }
 
     TypeChecker(AST.plus node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.e1, classInfo, programClass);
-        TypeChecker(node.e2, classInfo, programClass);
+        new TypeChecker(node.e1, classInfo, programClass);
+        new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
             reportError(programClass.filename, programClass.lineNo, "Addition requires non-Int arguments");
         }
@@ -268,8 +268,8 @@ class TypeChecker {
     }
 
     TypeChecker(AST.sub node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.e1, classInfo, programClass);
-        TypeChecker(node.e2, classInfo, programClass);
+        new TypeChecker(node.e1, classInfo, programClass);
+        new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
             reportError(programClass.filename, programClass.lineNo, "Subtraction requires non-Int arguments");
         }
@@ -277,8 +277,8 @@ class TypeChecker {
     }
 
     TypeChecker(AST.mul node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.e1, classInfo, programClass);
-        TypeChecker(node.e2, classInfo, programClass);
+        new TypeChecker(node.e1, classInfo, programClass);
+        new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
             reportError(programClass.filename, programClass.lineNo, "Multiplication requires non-Int arguments");
         }
@@ -286,8 +286,8 @@ class TypeChecker {
     }
 
     TypeChecker(AST.divide node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.e1, classInfo, programClass);
-        TypeChecker(node.e2, classInfo, programClass);
+        new TypeChecker(node.e1, classInfo, programClass);
+        new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
             reportError(programClass.filename, programClass.lineNo, "Division requires non-Int arguments");
         }
@@ -295,7 +295,7 @@ class TypeChecker {
     }
 
     TypeChecker(AST.comp node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.e1, classInfo, programClass);
+        new TypeChecker(node.e1, classInfo, programClass);
         if (!CoolUtils.BOOL_TYPE_STR.equals(node.e1.type)) {
             reportError(programClass.filename, programClass.lineNo, "Argument of 'not' should be of type Bool.");
         }
@@ -303,8 +303,8 @@ class TypeChecker {
     }
 
     TypeChecker(AST.lt node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.e1, classInfo, programClass);
-        TypeChecker(node.e2, classInfo, programClass);
+        new TypeChecker(node.e1, classInfo, programClass);
+        new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
             reportError(programClass.filename, programClass.lineNo, "less-than operator requires non-Int arguments");
         }
@@ -312,8 +312,8 @@ class TypeChecker {
     }
 
     TypeChecker(AST.leq node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.e1, classInfo, programClass);
-        TypeChecker(node.e2, classInfo, programClass);
+        new TypeChecker(node.e1, classInfo, programClass);
+        new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
             reportError(programClass.filename, programClass.lineNo,
                     "less-than equal operator requires non-Int arguments");
@@ -322,16 +322,16 @@ class TypeChecker {
     }
 
     TypeChecker(AST.neg node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.e1, classInfo, programClass);
-        if (nonIntegerExpression(node.e1, node.e2)) {
+        new TypeChecker(node.e1, classInfo, programClass);
+        if (nonIntegerExpression(node.e1, node.e1)) {
             reportError(programClass.filename, programClass.lineNo, "negation operator requires non-Int arguments");
         }
         node.type = CoolUtils.INT_TYPE_STR;
     }
 
     TypeChecker(AST.eq node, ClassInfo classInfo, class_ programClass) { // check again
-        TypeChecker(node.e1, classInfo, programClass);
-        TypeChecker(node.e2, classInfo, programClass);
+        new TypeChecker(node.e1, classInfo, programClass);
+        new TypeChecker(node.e2, classInfo, programClass);
         if (!node.e1.type.equals(node.e2.type)) {
             boolean exp1 = CoolUtils.INT_TYPE_STR.equals(node.e1.type) || CoolUtils.BOOL_TYPE_STR.equals(node.e1.type)
                     || CoolUtils.STRING_TYPE_STR.equals(node.e1.type);
@@ -347,7 +347,7 @@ class TypeChecker {
     }
 
     TypeChecker(AST.isvoid node, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(node.e1, classInfo, programClass);
+        new TypeChecker(node.e1, classInfo, programClass);
         node.type = CoolUtils.BOOL_TYPE_STR;
     }
 
@@ -376,29 +376,27 @@ class TypeChecker {
         e1.type = CoolUtils.STRING_TYPE_STR;
     }
 
-    TypeChecker() {
-    }
-
     TypeChecker(AST.static_dispatch staticDispatchNode, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(staticDispatchNode.caller, classInfo, programClass);
+        new TypeChecker(staticDispatchNode.caller, classInfo, programClass);
         String T0 = staticDispatchNode.caller.type;
         List<String> actualTypes = new ArrayList<String>();
-        for (AST.experssion nodeExpression : staticDispatchNode.actuals) {
-            TypeChecker(nodeExpression, classInfo, programClass);
-            actualTypes.add(expressionNode.type);
+        for (AST.expression nodeExpression : staticDispatchNode.actuals) {
+            new TypeChecker(nodeExpression, classInfo, programClass);
+            actualTypes.add(nodeExpression.type);
         }
 
-        if (!classInfo.graph.conforms(T0, node.typeid, CoolUtils.OBJECT_TYPE_STR)) {
+        if (!classInfo.Graph.conforms(T0, staticDispatchNode.typeid)) {
             reportError(programClass.filename, staticDispatchNode.lineNo,
-                    "Exrpession type " + T0 + " does not conform to declared " + "static dispatch type" + node.typeid);
+                    "Exrpession type " + T0 + " does not conform to declared " + "static dispatch type" + staticDispatchNode.typeid);
         }
 
         Map<String, List<String>> method2Args = classInfo.methodInfo.lookUpGlobal(staticDispatchNode.typeid);
         if (method2Args == null) {
-            reportError(classInfo.filename, staticDispatchNode.lineNo,
+            reportError(programClass.filename, staticDispatchNode.lineNo,
                     "Class " + programClass.name + " was not found in " + "classInfo.methodInfo");
             staticDispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
         } else {
+            List<String> formalTypes = method2Args.get(staticDispatchNode.name);
             if (actualTypes.size() != formalTypes.size() - 1) {
                 reportError(programClass.filename, staticDispatchNode.lineNo,
                         "Method " + staticDispatchNode.name + " of class " + programClass.name
@@ -407,8 +405,8 @@ class TypeChecker {
                 staticDispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
             } else {
                 for (int i = 0; i < actualTypes.size(); i++) {
-                    if (!classInfo.graph.conforms(actualTypes.get(i), formalTypes.get(i), CoolUtils.OBJECT_TYPE_STR)) {
-                        reportError(classInfo.filename, staticDispatchNode.lineNo,
+                    if (!classInfo.Graph.conforms(actualTypes.get(i), formalTypes.get(i))) {
+                        reportError(programClass.filename, staticDispatchNode.lineNo,
                                 "Inferred type " + actualTypes.get(i) + " does not " + "conform to formal type "
                                         + formalTypes.get(i) + " for dispatch " + staticDispatchNode.name + " of "
                                         + " Class " + programClass.name);
@@ -416,18 +414,18 @@ class TypeChecker {
                         return;
                     }
                 }
-                String T_return = formalTypes.get(formalType.size() - 1);
+                String T_return = formalTypes.get(formalTypes.size() - 1);
                 staticDispatchNode.type = T_return;
             }
         }
     }
 
     TypeChecker(AST.dispatch dispatchNode, ClassInfo classInfo, class_ programClass) {
-        TypeChecker(dispatchNode.caller, classInfo, programClass);
+        new TypeChecker(dispatchNode.caller, classInfo, programClass);
         String T0 = dispatchNode.caller.type;
         List<String> actualTypes = new ArrayList<String>();
         for (AST.expression nodeExpression : dispatchNode.actuals) {
-            TypeChecker(nodeExpression, classInfo, programClass);
+            new TypeChecker(nodeExpression, classInfo, programClass);
             actualTypes.add(nodeExpression.type);
         }
         String T0_prime = T0;
@@ -438,15 +436,15 @@ class TypeChecker {
                     + programClass.name + " was not found in classInfo.methodInfo ");
             dispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
         } else {
-            List<String> formalTypes = getFormalList(dispatchNode.name, classInfo.classnameMap.get(T0_prime),
+            List<String> formalTypes = CoolUtils.getFormalList(dispatchNode.name, classInfo.ClassNameMap.get(T0_prime),
                     classInfo);
             if (formalTypes == null) {
                 reportError(programClass.filename, dispatchNode.lineNo,
                         "Dispatch method was " + dispatchNode.name + " not found.");
-                dispatchNode.type = CollUtils.OBJECT_TYPE_STR;
+                dispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
             } else {
                 for (int i = 0; i < actualTypes.size(); i++) {
-                    if (!classInfo.graph.conforms(actualTypes.get(i), formalTypes.get(i), CoolUtils.OBJECT_TYPE_STR)) {
+                    if (!classInfo.Graph.conforms(actualTypes.get(i), formalTypes.get(i))) {
                         reportError(programClass.filename, dispatchNode.lineNo,
                                 "Method dispatch " + dispatchNode.name + " of class " + programClass.name
                                         + " was called with argument number " + String.valueOf(i) + " with type "

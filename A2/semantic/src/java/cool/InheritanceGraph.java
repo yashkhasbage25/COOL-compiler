@@ -78,7 +78,7 @@ public class InheritanceGraph {
 		parentNameMap.put(end, start);
 	}
 
-	public boolean cycle_present() {
+	public boolean cyclePresent() {
 		Map<Vertex, Integer> colour = new HashMap<Vertex, Integer>();
 		for (Vertex v : vertices)
 			colour.put(v, 0);
@@ -101,7 +101,7 @@ public class InheritanceGraph {
 		return false;
 	}
 
-	public String LowestCommonAncestor(String u, String v, String rootVertex) {
+	public String LowestCommonAncestor(String u, String v) {
 
 		Stack<String> path_to_u = new Stack<String>();
 		Stack<String> path_to_v = new Stack<String>();

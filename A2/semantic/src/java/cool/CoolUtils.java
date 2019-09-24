@@ -32,7 +32,7 @@ class CoolUtils {
                 && classInfo.methodInfo.lookUpGlobal(programClass.name).get(methodName) != null) {
             return classInfo.methodInfo.lookUpGlobal(programClass.name).get(methodName);
         }
-        String parentName = classInfo.Graph.parentNameMap(programClass.name);
+        String parentName = classInfo.Graph.parentNameMap.get(programClass.name);
         while (parentName != null) {
             class_ parent = classInfo.ClassNameMap.get(parentName);
             for (AST.feature classFeature : parent.features) {
@@ -46,14 +46,21 @@ class CoolUtils {
         return null;
     }
 
-    public static void updateObjectEnv(ScopeTable<Map<String, String>> attrInfo, class_ programClass,
-            List<VariableMapping> variableMapping) {
-        Map<String, String> newAttrTypeMap = new HashMap<String, String>();
-        newAttrTypeMap.putAll(attrInfo.lookUpGlobal(programClass.name));
-        for (int i = 0; i < variableMapping.size(); i++) {
-            newAttrTypeMap.put(variableMapping.get(i).getLeftString(), variableMapping.get(i).getRightString());
-        }
-        attrInfo.enterScope();
-        attrInfo.insert(programClass.name, newAttrTypeMap);
-    }
+    public static String attrType(String attrName, class_ programClass, ClassInfo classInfo) {
+		if (classInfo.attrInfo.lookUpGlobal(programClass.name) != null
+				&& (classInfo.attrInfo.lookUpGlobal(programClass.name)).get(attrName) != null)
+			return (classInfo.attrInfo.lookUpGlobal(programClass.name)).get(attrName);
+		String parentName = classInfo.Graph.parentNameMap.get(programClass.name);
+		while (parentName != null) {
+			class_ parent = classInfo.ClassNameMap.get(parentName);
+			for (AST.feature classFeature : parent.features) {
+				if (classFeature instanceof AST.attr) {
+					if (((AST.attr) classFeature).name.equals(attrName))
+						return classInfo.attrInfo.lookUpGlobal(parent.name).get(attrName);
+				}
+			}
+			parentName = classInfo.Graph.parentNameMap.get(parentName);
+		}
+		return null;
+	}
 }

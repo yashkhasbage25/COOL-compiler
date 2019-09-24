@@ -27,7 +27,7 @@ public class Semantic {
 	public Semantic(AST.program program) {
 
 		classInfo.fillDefaultClasses();
-		classInfo.createNewObjectInfo();
+		classInfo.createNewAttrInfo();
 		classInfo.createNewMethodInfo();
 
 		collectAndValidateClasses(program);

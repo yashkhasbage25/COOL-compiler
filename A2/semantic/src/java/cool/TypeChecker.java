@@ -258,6 +258,7 @@ class TypeChecker {
         new TypeChecker(node.ifbody, classInfo, programClass);
         new TypeChecker(node.elsebody, classInfo, programClass);
         node.type = classInfo.Graph.LowestCommonAncestor(node.ifbody.type, node.elsebody.type); // check again
+        System.out.println(node.ifbody.type + " " + node.elsebody.type + " " + node.type);
     }
 
     TypeChecker(AST.loop node, ClassInfo classInfo, class_ programClass) {
@@ -350,9 +351,10 @@ class TypeChecker {
                     || CoolUtils.STRING_TYPE_STR.equals(node.e1.type);
             boolean exp2 = CoolUtils.INT_TYPE_STR.equals(node.e2.type) || CoolUtils.BOOL_TYPE_STR.equals(node.e2.type)
                     || CoolUtils.STRING_TYPE_STR.equals(node.e2.type);
+
             if (exp1 && exp2)
                 reportError(programClass.filename, node.lineNo, "Illegal comparison with a basic type.");
-            else
+            else if (exp1 || exp2)
                 reportError(programClass.filename, node.lineNo,
                         "Illegal comparison with a basic type with non basic types.");
         }
@@ -399,14 +401,14 @@ class TypeChecker {
         }
 
         if (!classInfo.Graph.conforms(T0, staticDispatchNode.typeid)) {
-            reportError(programClass.filename, staticDispatchNode.lineNo, "Exrpession type " + T0
-                    + " does not conform to declared " + "static dispatch type " + staticDispatchNode.typeid);
+            reportError(programClass.filename, staticDispatchNode.lineNo,
+                    "Exrpession type " + T0 + " does not conform to declared " + "static dispatch type "
+                            + staticDispatchNode.typeid + "for method " + staticDispatchNode.name);
         }
-
         Map<String, List<String>> method2Args = classInfo.methodInfo.lookUpGlobal(staticDispatchNode.typeid);
         if (method2Args == null) {
-            reportError(programClass.filename, staticDispatchNode.lineNo,
-                    "Class " + programClass.name + " was not found in " + "classInfo.methodInfo");
+            reportError(programClass.filename, staticDispatchNode.lineNo, "Class " + staticDispatchNode.typeid
+                    + " was not found in " + "classInfo.methodInfo for method" + staticDispatchNode.name);
             staticDispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
         } else {
             List<String> formalTypes = method2Args.get(staticDispatchNode.name);

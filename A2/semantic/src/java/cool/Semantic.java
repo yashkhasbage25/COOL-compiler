@@ -222,6 +222,7 @@ public class Semantic {
 				}
 			}
 			String className = programClass.name;
+			System.out.println("225 " + classMethodName2Args);
 			classInfo.methodInfo.insert(className, classMethodName2Args);
 			classInfo.attrInfo.insert(className, classAttrName2Type);
 		}

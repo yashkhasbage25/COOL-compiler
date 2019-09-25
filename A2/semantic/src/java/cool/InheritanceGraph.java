@@ -126,11 +126,17 @@ public class InheritanceGraph {
 			path_to_v.push(iter);
 			iter = parentNameMap.get(iter);
 		}
+		System.out.println(path_to_u);
+		System.out.println(path_to_v);
+		// System.out.println(u + " " + v);
 		String prev = Root;
 		while (true) {
-			if (!path_to_v.empty() && !path_to_u.empty() && path_to_v.peek() == path_to_u.peek()) {
+			// System.out.println(path_to_v.peek() + path_to_u.peek() +
+			// (path_to_v.peek().equals(path_to_u.peek())));
+			if (!path_to_v.empty() && !path_to_u.empty() && (path_to_v.peek().equals(path_to_u.peek()))) {
 				prev = path_to_v.peek();
 				path_to_v.pop();
+				System.out.println(prev + "??");
 				path_to_u.pop();
 			} else
 				return prev;

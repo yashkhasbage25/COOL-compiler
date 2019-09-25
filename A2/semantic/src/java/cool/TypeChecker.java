@@ -22,12 +22,12 @@ class TypeChecker {
 
         Map<String, List<String>> classMethodName2Args = classInfo.methodInfo.lookUpGlobal(programClass.name);
         if (classMethodName2Args == null) {
-            reportError(programClass.filename, programClass.lineNo,
+            reportError(programClass.filename, methodNode.lineNo,
                     "Class " + programClass.name + " was not found in classInfo.methodInfo .");
         } else {
             List<String> formalArgsList = classMethodName2Args.get(methodNode.name);
             if (formalArgsList == null) {
-                reportError(programClass.filename, programClass.lineNo, "formalArgsList for method " + methodNode.name
+                reportError(programClass.filename, methodNode.lineNo, "formalArgsList for method " + methodNode.name
                         + " of Class " + programClass.name + " was not found in classMethodName2Args");
             } else {
                 List<VariableMapping> variableMapping = new ArrayList<VariableMapping>();
@@ -40,14 +40,14 @@ class TypeChecker {
                 CoolUtils.createNewObjectScope(classInfo.attrInfo, programClass, variableMapping);
                 new TypeChecker(methodNode.body, classInfo, programClass);
                 classInfo.attrInfo.exitScope();
-                String T0_prime_string = methodNode.body.type;
+                String T0_prime = methodNode.body.type;
 
                 if (classInfo.ClassNameMap.get(methodNode.typeid) == null) {
-                    reportError(programClass.filename, programClass.lineNo, "Return type not specified for method "
+                    reportError(programClass.filename, methodNode.lineNo, "Return type not specified for method "
                             + methodNode.name + " for Class " + programClass.name);
-                } else if (!classInfo.Graph.conforms(T0_prime_string, methodNode.typeid)) {
-                    reportError(programClass.filename, programClass.lineNo,
-                            "Inferred return type " + T0_prime_string + " method " + methodNode.name
+                } else if (!classInfo.Graph.conforms(T0_prime, methodNode.typeid)) {
+                    reportError(programClass.filename, methodNode.lineNo,
+                            "Inferred return type " + T0_prime + " method " + methodNode.name
                                     + " does not conform to declared return type " + methodNode.typeid);
                 }
             }
@@ -58,17 +58,18 @@ class TypeChecker {
         Map<String, String> classAttrName2Type = classInfo.attrInfo.lookUpGlobal(programClass.name);
         // System.out.println(classAttrName2Type);
         if (classAttrName2Type == null) {
-            reportError(programClass.filename, programClass.lineNo,
+            reportError(programClass.filename, attrNode.lineNo,
                     "Class " + programClass.name + " was not found in classInfo.attrInfo");
         } else {
             String T0 = classAttrName2Type.get(attrNode.name);
+            // System.out.println(programClass.name);
             if (T0 == null) {
-                reportError(programClass.name, programClass.lineNo,
+                reportError(programClass.name, attrNode.lineNo,
                         "Attribute with type '" + T0 + "' in classInfo.attrInfo is not equal to declared type "
                                 + attrNode.typeid
                                 + ". This maybe caused due to multiple definitions or inherited variables");
             } else if (!classInfo.Graph.checkClass(T0)) {
-                reportError(programClass.name, programClass.lineNo,
+                reportError(programClass.name, attrNode.lineNo,
                         "Type " + T0 + " for attribute " + attrNode.name + " has not been declared");
             } else {
                 if (!(attrNode.value instanceof AST.no_expr)) {
@@ -78,7 +79,7 @@ class TypeChecker {
                     new TypeChecker(attrNode.value, classInfo, programClass);
                     String T1 = attrNode.value.type;
                     if (!classInfo.Graph.conforms(T1, T0)) {
-                        reportError(programClass.filename, programClass.lineNo,
+                        reportError(programClass.filename, attrNode.lineNo,
                                 "Inferred type " + T1 + " of initialization of attribute " + attrNode.name
                                         + " does not conform to declared type " + attrNode.typeid);
                     }
@@ -96,14 +97,28 @@ class TypeChecker {
     }
 
     TypeChecker(AST.assign node, ClassInfo classInfo, class_ programClass) {
-        String type = CoolUtils.attrType(node.name, programClass, classInfo);
-        if (type == null) {
-            reportError(programClass.filename, programClass.lineNo, "Undefined Identifier :" + node.name);
-            node.type = CoolUtils.OBJECT_TYPE_STR;
+        Map<String, String> variableMap = classInfo.attrInfo.lookUpGlobal(programClass.name);
+        if (variableMap == null) {
+            reportError(programClass.filename, node.lineNo,
+                    "class " + programClass.name + " not found in" + " classInfo.attrinfo");
+
         } else {
-            new TypeChecker(node.e1, classInfo, programClass);
-            String type_prime = node.e1.type;
-            // if(classInfo.)
+            String type = CoolUtils.attrType(node.name, programClass, classInfo);
+            if (type == null) {
+                reportError(programClass.filename, node.lineNo, "Undefined Identifier :" + node.name);
+                node.type = CoolUtils.OBJECT_TYPE_STR;
+            } else {
+                new TypeChecker(node.e1, classInfo, programClass);
+                String type_prime = node.e1.type;
+                // System.out.println(node.name + " " + type + " " + type_prime);
+                if (classInfo.Graph.conforms(node.e1.type, type)) {
+                    node.type = type_prime;
+                } else {
+                    reportError(programClass.filename, node.lineNo, "LHS : " + type + " RHS :" + type_prime
+                            + " Type of expression does not conform to type of attribute for identifier " + node.name);
+                    node.type = node.e1.type;
+                }
+            }
         }
     }
 
@@ -189,7 +204,7 @@ class TypeChecker {
             variableMapping.add(new VariableMapping(b.name, b.type));
             CoolUtils.createNewObjectScope(classInfo.attrInfo, programClass, variableMapping);
             if (branchDeclerations.contains(b.type)) {
-                reportError(programClass.filename, programClass.lineNo, "Same branch exists"); // check
+                reportError(programClass.filename, node.lineNo, "Same branch exists"); // check
                 node.type = "Object";
             } else {
                 branchDeclerations.add(b.type);
@@ -202,7 +217,7 @@ class TypeChecker {
             classInfo.attrInfo.exitScope();
         }
         if (typcases.isEmpty()) {
-            reportError(programClass.filename, programClass.lineNo, "atleast 1 type requires"); // check
+            reportError(programClass.filename, node.lineNo, "atleast 1 type requires"); // check
         } else {
             String case_type0 = typcases.get(0);
             for (int i = 1; i < typcases.size(); i++) {
@@ -215,14 +230,15 @@ class TypeChecker {
     }
 
     TypeChecker(AST.let node, ClassInfo classInfo, class_ programClass) {
-        String T0_prime_string;
+        String T0_prime;
         String type_decl = node.typeid;
-        T0_prime_string = type_decl; // both are Same
+        T0_prime = type_decl; // both are Same
         if (!(node.value instanceof AST.no_expr)) {
             new TypeChecker(node.value, classInfo, programClass);
             String T1 = node.value.type;
-            if (!classInfo.Graph.conforms(T1, T0_prime_string)) {
-                reportError(programClass.filename, programClass.lineNo, "Infered type does not conform to identifier");
+            if (!classInfo.Graph.conforms(T1, T0_prime)) {
+                reportError(programClass.filename, node.lineNo,
+                        "Infered type " + T1 + " does not conform to identifier declared type" + T0_prime);
             }
         }
         ArrayList<VariableMapping> variableMapping = new ArrayList<VariableMapping>();
@@ -236,7 +252,7 @@ class TypeChecker {
     TypeChecker(AST.cond node, ClassInfo classInfo, class_ programClass) {
         new TypeChecker(node.predicate, classInfo, programClass);
         if (!node.predicate.type.equals(CoolUtils.BOOL_TYPE_STR)) {
-            reportError(programClass.filename, programClass.lineNo, "Predicate of conditional must be of Bool type");
+            reportError(programClass.filename, node.lineNo, "Predicate of conditional must be of Bool type");
             node.type = CoolUtils.OBJECT_TYPE_STR;
         }
         new TypeChecker(node.ifbody, classInfo, programClass);
@@ -247,8 +263,7 @@ class TypeChecker {
     TypeChecker(AST.loop node, ClassInfo classInfo, class_ programClass) {
         new TypeChecker(node.predicate, classInfo, programClass);
         if (!node.predicate.type.equals(CoolUtils.BOOL_TYPE_STR)) {
-            reportError(programClass.filename, programClass.lineNo,
-                    "Infered Predicate of while loop must be of Bool type");
+            reportError(programClass.filename, node.lineNo, "Infered Predicate of while loop must be of Bool type");
             node.type = CoolUtils.OBJECT_TYPE_STR;
         } else {
             new TypeChecker(node.body, classInfo, programClass);
@@ -261,7 +276,7 @@ class TypeChecker {
         new TypeChecker(node.e1, classInfo, programClass);
         new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
-            reportError(programClass.filename, programClass.lineNo, "Addition requires non-Int arguments");
+            reportError(programClass.filename, node.lineNo, "Addition requires non-Int arguments");
         }
         node.type = CoolUtils.INT_TYPE_STR;
     }
@@ -270,7 +285,7 @@ class TypeChecker {
         new TypeChecker(node.e1, classInfo, programClass);
         new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
-            reportError(programClass.filename, programClass.lineNo, "Subtraction requires non-Int arguments");
+            reportError(programClass.filename, node.lineNo, "Subtraction requires non-Int arguments");
         }
         node.type = CoolUtils.INT_TYPE_STR;
     }
@@ -279,7 +294,7 @@ class TypeChecker {
         new TypeChecker(node.e1, classInfo, programClass);
         new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
-            reportError(programClass.filename, programClass.lineNo, "Multiplication requires non-Int arguments");
+            reportError(programClass.filename, node.lineNo, "Multiplication requires non-Int arguments");
         }
         node.type = CoolUtils.INT_TYPE_STR;
     }
@@ -288,7 +303,7 @@ class TypeChecker {
         new TypeChecker(node.e1, classInfo, programClass);
         new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
-            reportError(programClass.filename, programClass.lineNo, "Division requires non-Int arguments");
+            reportError(programClass.filename, node.lineNo, "Division requires non-Int arguments");
         }
         node.type = CoolUtils.INT_TYPE_STR;
     }
@@ -296,7 +311,7 @@ class TypeChecker {
     TypeChecker(AST.comp node, ClassInfo classInfo, class_ programClass) {
         new TypeChecker(node.e1, classInfo, programClass);
         if (!CoolUtils.BOOL_TYPE_STR.equals(node.e1.type)) {
-            reportError(programClass.filename, programClass.lineNo, "Argument of 'not' should be of type Bool.");
+            reportError(programClass.filename, node.lineNo, "Argument of 'not' should be of type Bool.");
         }
         node.type = CoolUtils.BOOL_TYPE_STR;
     }
@@ -305,7 +320,7 @@ class TypeChecker {
         new TypeChecker(node.e1, classInfo, programClass);
         new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
-            reportError(programClass.filename, programClass.lineNo, "less-than operator requires non-Int arguments");
+            reportError(programClass.filename, node.lineNo, "less-than operator requires non-Int arguments");
         }
         node.type = CoolUtils.INT_TYPE_STR;
     }
@@ -314,8 +329,7 @@ class TypeChecker {
         new TypeChecker(node.e1, classInfo, programClass);
         new TypeChecker(node.e2, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e2)) {
-            reportError(programClass.filename, programClass.lineNo,
-                    "less-than equal operator requires non-Int arguments");
+            reportError(programClass.filename, node.lineNo, "less-than equal operator requires non-Int arguments");
         }
         node.type = CoolUtils.INT_TYPE_STR;
     }
@@ -323,7 +337,7 @@ class TypeChecker {
     TypeChecker(AST.neg node, ClassInfo classInfo, class_ programClass) {
         new TypeChecker(node.e1, classInfo, programClass);
         if (nonIntegerExpression(node.e1, node.e1)) {
-            reportError(programClass.filename, programClass.lineNo, "negation operator requires non-Int arguments");
+            reportError(programClass.filename, node.lineNo, "negation operator requires non-Int arguments");
         }
         node.type = CoolUtils.INT_TYPE_STR;
     }
@@ -336,11 +350,11 @@ class TypeChecker {
                     || CoolUtils.STRING_TYPE_STR.equals(node.e1.type);
             boolean exp2 = CoolUtils.INT_TYPE_STR.equals(node.e2.type) || CoolUtils.BOOL_TYPE_STR.equals(node.e2.type)
                     || CoolUtils.STRING_TYPE_STR.equals(node.e2.type);
-            if (exp1 || exp2)
-                reportError(programClass.filename, programClass.lineNo, "Illegal comparison with a basic type.");
-            // if (exp1 || exp2)
-            // reportError(programClass.filename, programClass.lineNo, "Illegal comparison
-            // with a basic type.");
+            if (exp1 && exp2)
+                reportError(programClass.filename, node.lineNo, "Illegal comparison with a basic type.");
+            else
+                reportError(programClass.filename, node.lineNo,
+                        "Illegal comparison with a basic type with non basic types.");
         }
         node.type = CoolUtils.BOOL_TYPE_STR;
     }
@@ -358,7 +372,7 @@ class TypeChecker {
         if (classInfo.Graph.checkClass(programClass.name))
             node.type = node.typeid;
         else {
-            reportError(programClass.filename, programClass.lineNo, "Undefined Type " + node.typeid);
+            reportError(programClass.filename, node.lineNo, "Undefined Type " + node.typeid);
             node.type = CoolUtils.OBJECT_TYPE_STR;
         }
     }
@@ -386,7 +400,7 @@ class TypeChecker {
 
         if (!classInfo.Graph.conforms(T0, staticDispatchNode.typeid)) {
             reportError(programClass.filename, staticDispatchNode.lineNo, "Exrpession type " + T0
-                    + " does not conform to declared " + "static dispatch type" + staticDispatchNode.typeid);
+                    + " does not conform to declared " + "static dispatch type " + staticDispatchNode.typeid);
         }
 
         Map<String, List<String>> method2Args = classInfo.methodInfo.lookUpGlobal(staticDispatchNode.typeid);
@@ -461,5 +475,24 @@ class TypeChecker {
                 dispatchNode.type = T_return;
             }
         }
+    }
+
+    TypeChecker(AST.object node, ClassInfo classInfo, class_ programClass) {
+        Map<String, String> varMap = classInfo.attrInfo.lookUpGlobal(programClass.name);
+        if (varMap == null) {
+            reportError(programClass.filename, node.lineNo,
+                    "Class " + programClass.name + "not in classInfo.attrinfo ");
+            node.type = CoolUtils.OBJECT_TYPE_STR;
+        } else {
+            String type = CoolUtils.attrType(node.name, programClass, classInfo);
+            if (type == null) {
+                reportError(programClass.filename, node.lineNo,
+                        "Identifier " + node.name + " in class " + programClass.name + "is undefined");
+                node.type = CoolUtils.OBJECT_TYPE_STR;
+            } else {
+                node.type = type;
+            }
+        }
+
     }
 }

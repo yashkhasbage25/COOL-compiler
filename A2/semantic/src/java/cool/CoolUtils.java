@@ -28,7 +28,8 @@ class CoolUtils {
     }
 
     public static List<String> getFormalList(String methodName, class_ programClass, ClassInfo classInfo) {
-        System.out.println(31); System.out.println(classInfo.methodInfo.lookUpGlobal(programClass.name));
+        // System.out.println(31);
+        // System.out.println(classInfo.methodInfo.lookUpGlobal(programClass.name));
         if (classInfo.methodInfo.lookUpGlobal(programClass.name) != null
                 && classInfo.methodInfo.lookUpGlobal(programClass.name).get(methodName) != null) {
             return classInfo.methodInfo.lookUpGlobal(programClass.name).get(methodName);
@@ -48,20 +49,20 @@ class CoolUtils {
     }
 
     public static String attrType(String attrName, class_ programClass, ClassInfo classInfo) {
-		if (classInfo.attrInfo.lookUpGlobal(programClass.name) != null
-				&& (classInfo.attrInfo.lookUpGlobal(programClass.name)).get(attrName) != null)
-			return (classInfo.attrInfo.lookUpGlobal(programClass.name)).get(attrName);
-		String parentName = classInfo.Graph.parentNameMap.get(programClass.name);
-		while (parentName != null) {
-			class_ parent = classInfo.ClassNameMap.get(parentName);
-			for (AST.feature classFeature : parent.features) {
-				if (classFeature instanceof AST.attr) {
-					if (((AST.attr) classFeature).name.equals(attrName))
-						return classInfo.attrInfo.lookUpGlobal(parent.name).get(attrName);
-				}
-			}
-			parentName = classInfo.Graph.parentNameMap.get(parentName);
-		}
-		return null;
-	}
+        if (classInfo.attrInfo.lookUpGlobal(programClass.name) != null
+                && (classInfo.attrInfo.lookUpGlobal(programClass.name)).get(attrName) != null)
+            return (classInfo.attrInfo.lookUpGlobal(programClass.name)).get(attrName);
+        String parentName = classInfo.Graph.parentNameMap.get(programClass.name);
+        while (parentName != null) {
+            class_ parent = classInfo.ClassNameMap.get(parentName);
+            for (AST.feature classFeature : parent.features) {
+                if (classFeature instanceof AST.attr) {
+                    if (((AST.attr) classFeature).name.equals(attrName))
+                        return classInfo.attrInfo.lookUpGlobal(parent.name).get(attrName);
+                }
+            }
+            parentName = classInfo.Graph.parentNameMap.get(parentName);
+        }
+        return null;
+    }
 }

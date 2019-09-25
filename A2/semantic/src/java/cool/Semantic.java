@@ -30,24 +30,35 @@ public class Semantic {
 		classInfo.createNewAttrInfo();
 		classInfo.createNewMethodInfo();
 		classInfo.fillDefaultClasses();
+
 		collectAndValidateClasses(program);
-		System.out.println("valied classes");
-		runCycleReporter(program);
-		System.out.println("cycle check done");
-		checkForUndefinedParent(program);
-		System.out.println("undefined parent check done");
-		analyzeClassFeatures(program);
-		System.out.println("analyze class feature done");
-		recurseTypeChecker(program);
-		System.out.println("recurseive type checker done");
-		errorFlag = typeCheckErrorFlag;
+		// System.out.println("valied classes");
+		if (!errorFlag)
+			runCycleReporter(program);
+		// System.out.println("cycle check done");
+		if (!errorFlag)
+			checkForUndefinedParent(program);
+		// System.out.println("undefined parent check done");
+		if (!errorFlag)
+			analyzeClassFeatures(program);
+
+		// System.out.println("analyze class feature done");
+		if (!errorFlag)
+			recurseTypeChecker(program);
+		// System.out.println("recurseive type checker done");
+		errorFlag = errorFlag || typeCheckErrorFlag;
+		// if (errorFlag)
+		// System.exit(1);
+
 	}
 
 	private void runCycleReporter(AST.program program) {
-		boolean flag=classInfo.Graph.cyclePresent();
+		boolean flag = classInfo.Graph.cyclePresent();
 		// System.out.println(flag);
-		if(flag)
+		errorFlag = errorFlag || flag;
+		if (flag) {
 			reportError(program.classes.get(0).filename, 0, "Cycle detected");
+		}
 	}
 
 	private void collectAndValidateClasses(AST.program program) {
@@ -66,55 +77,53 @@ public class Semantic {
 
 	private boolean isDefaultClassRedifined(class_ programClass) {
 
-		boolean foundError = false;
 		String programClassName = programClass.name;
 		if (programClassName.equals(CoolUtils.OBJECT_TYPE_STR)) {
 			reportError(programClass.filename, programClass.lineNo, "Redefinition of Object class.");
-			foundError = true;
+			errorFlag = true;
 		} else if (programClassName.equals(CoolUtils.INT_TYPE_STR)) {
 			reportError(programClass.filename, programClass.lineNo, "Redefinition of Int class.");
-			foundError = true;
+			errorFlag = true;
 		} else if (programClassName.equals(CoolUtils.STRING_TYPE_STR)) {
 			reportError(programClass.filename, programClass.lineNo, "Redefinition of String class.");
-			foundError = true;
+			errorFlag = true;
 		} else if (programClassName.equals(CoolUtils.BOOL_TYPE_STR)) {
 			reportError(programClass.filename, programClass.lineNo, "Redefinition of Bool class.");
-			foundError = true;
+			errorFlag = true;
 		} else if (programClassName.equals(CoolUtils.IO_TYPE_STR)) {
 			reportError(programClass.filename, programClass.lineNo, "Redefinition of IO class.");
-			foundError = true;
+			errorFlag = true;
 		}
-		return foundError;
+		return errorFlag;
 	}
 
 	private boolean classInheritanceNotPossible(class_ programClass) {
 
-		boolean foundError = false;
 		String parentClassName = programClass.parent;
 		if (parentClassName.equals(CoolUtils.SELF_TYPE_STR)) {
 			reportError(programClass.filename, programClass.lineNo, "Parent class cannot be SELF_TYPE");
-			foundError = true;
+			errorFlag = true;
 		} else if (parentClassName.equals(CoolUtils.INT_TYPE_STR) || parentClassName.equals(CoolUtils.STRING_TYPE_STR)
 				|| parentClassName.equals(CoolUtils.BOOL_TYPE_STR)) {
 			reportError(programClass.filename, programClass.lineNo, "Class " + parentClassName
 					+ " can never be inherited. Attempt to inherit by class " + programClass.name);
-			foundError = true;
+			errorFlag = true;
 		}
-		return foundError;
+		return errorFlag;
 	}
 
 	private boolean checkForUndefinedParent(AST.program program) {
-		boolean foundError = false;
+
 		for (class_ programClass : program.classes) {
 			String parentClassName = programClass.parent;
 			if (classInfo.ClassNameMap.get(parentClassName) == null) {
 				reportError(programClass.filename, programClass.lineNo,
 						"Inheritance unsuccessful: " + programClass.name + " could not inherit " + parentClassName
 								+ " because " + parentClassName + " was not defined.");
-				foundError = true;
+				errorFlag = true;
 			}
 		}
-		return foundError;
+		return errorFlag;
 	}
 
 	private boolean analyzeClassFeatures(AST.program program) {
@@ -122,7 +131,6 @@ public class Semantic {
 		boolean foundMain = false;
 		boolean foundmain = false;
 		boolean mainHasArgs = false;
-		boolean foundError = false;
 
 		for (class_ programClass : program.classes) {
 			if (programClass.name.equals(CoolUtils.MAIN_TYPE_STR)) {
@@ -132,7 +140,7 @@ public class Semantic {
 			if (classesFoundSet.contains(programClass.name)) {
 				reportError(programClass.filename, programClass.lineNo,
 						"Classes cannot be redefined. Class " + programClass.name + " was attempted to be redefined.");
-				foundError = true;
+				errorFlag = true;
 			} else {
 				classesFoundSet.add(programClass.name);
 			}
@@ -146,12 +154,13 @@ public class Semantic {
 					if (classAttrName2Type.containsKey(classAttr.name)) {
 						reportError(programClass.filename, programClass.lineNo,
 								"Attribute " + classAttr.name.toString() + " is redefined.");
-						foundError = true;
+						errorFlag = true;
 					} else if (isAttrInherited(classAttr, programClass, classInfo)) {
 						reportError(programClass.filename, programClass.lineNo,
 								"Attribute " + classAttr + " was inherited but still redefined.");
-						foundError = true;
+						errorFlag = true;
 					} else {
+						// System.out.println(classAttr.name);
 						classAttrName2Type.put(classAttr.name, classAttr.typeid);
 					}
 				} else if (classFeature instanceof AST.method) {
@@ -159,7 +168,7 @@ public class Semantic {
 					if (classAttrName2Type.containsKey(classMethod.name)) {
 						reportError(programClass.filename, programClass.lineNo,
 								"Method " + classMethod.name + " is redefined.");
-						foundError = true;
+						errorFlag = true;
 					} else {
 						List<String> argTypeList = new ArrayList<String>();
 						Set<String> argFormalNames = new HashSet<String>();
@@ -168,14 +177,14 @@ public class Semantic {
 								reportError(programClass.filename, programClass.lineNo,
 										"Formal argument " + arg.name + " was reused in definition of "
 												+ classMethod.name + " in class " + programClass.name);
-								foundError = true;
+								errorFlag = true;
 							} else {
 								argFormalNames.add(arg.name);
 								if (arg.typeid.equals(CoolUtils.SELF_TYPE_STR)) {
 									reportError(programClass.filename, programClass.lineNo,
 											"Formal parameter in definition of " + classMethod.name + " of class "
 													+ programClass.name + " cannot have type 'SELlineNoF_TYPE'");
-									foundError = true;
+									errorFlag = true;
 								} else {
 									argTypeList.add(arg.typeid);
 								}
@@ -194,7 +203,7 @@ public class Semantic {
 
 				} else {
 					reportError(programClass.filename, programClass.lineNo, "Reached a forbidden line.");
-					foundError = true;
+					errorFlag = true;
 				}
 			}
 			String className = programClass.name;
@@ -206,49 +215,49 @@ public class Semantic {
 	}
 
 	private boolean analyzeMainClass(boolean foundMain, boolean foundmain, boolean mainHasArgs, ClassInfo classInfo) {
-		boolean foundError = false;
+
 		if (!foundMain) {
 			reportError("", 0, "Class Main not found.");
-			foundError = true;
+			errorFlag = true;
 		} else {
 			if (!foundmain) {
 				reportError("", 0, "main method not found in Class Main");
-				foundError = true;
+				errorFlag = true;
 			} else {
 				if (!mainHasArgs) {
 					class_ classMain = classInfo.ClassNameMap.get(CoolUtils.MAIN_TYPE_STR);
 					reportError(classMain.filename, classMain.lineNo,
 							"In Class Main, 'main' method must not contain any arguments. Leave the arguments blank.");
-					foundError = true;
+					errorFlag = true;
 				}
 			}
 		}
-		return foundError;
+		return errorFlag;
 	}
 
 	private boolean recurseTypeChecker(AST.program program) {
 
-		boolean foundError = false;
 		for (class_ programClass : program.classes) {
-			System.out.println("class detected:" + programClass.name);
+			// System.out.println("class detected:" + programClass.name);
 			for (AST.feature classFeature : programClass.features) {
-				if (classFeature instanceof AST.attr){
-					System.out.println("attr detected: " + ((AST.attr)classFeature).name);
+				if (classFeature instanceof AST.attr) {
+					// System.out.println("attr detected: " + ((AST.attr) classFeature).name);
 					new TypeChecker((AST.attr) classFeature, classInfo, programClass);
-				}else if (classFeature instanceof AST.method) {
-					System.out.println("method detected: " + ((AST.method) classFeature).name);
+				} else if (classFeature instanceof AST.method) {
+					// System.out.println("method detected: " + ((AST.method) classFeature).name);
 					new TypeChecker((AST.method) classFeature, classInfo, programClass);
-				}else {
+				} else {
 					reportError(programClass.filename, programClass.lineNo, "Reached a forbidden point.");
-					foundError = true;
+					errorFlag = true;
 				}
 			}
 		}
-		return foundError;
+		return errorFlag;
 	}
 
 	private boolean isAttrInherited(AST.attr classAttr, class_ programClass, ClassInfo classInfo) {
 		String programClassParent = classInfo.Graph.parentNameMap.get(programClass.name);
+		// System.out.println(programClassParent + "???");
 		while (programClassParent != null) {
 			class_ nextParentClass = classInfo.ClassNameMap.get(programClassParent);
 			for (AST.feature classFeatures : nextParentClass.features) {

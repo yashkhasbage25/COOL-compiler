@@ -56,6 +56,7 @@ class TypeChecker {
 
     TypeChecker(AST.attr attrNode, ClassInfo classInfo, class_ programClass) {
         Map<String, String> classAttrName2Type = classInfo.attrInfo.lookUpGlobal(programClass.name);
+        // System.out.println(classAttrName2Type);
         if (classAttrName2Type == null) {
             reportError(programClass.filename, programClass.lineNo,
                     "Class " + programClass.name + " was not found in classInfo.attrInfo");
@@ -66,6 +67,9 @@ class TypeChecker {
                         "Attribute with type '" + T0 + "' in classInfo.attrInfo is not equal to declared type "
                                 + attrNode.typeid
                                 + ". This maybe caused due to multiple definitions or inherited variables");
+            } else if (!classInfo.Graph.checkClass(T0)) {
+                reportError(programClass.name, programClass.lineNo,
+                        "Type " + T0 + " for attribute " + attrNode.name + " has not been declared");
             } else {
                 if (!(attrNode.value instanceof AST.no_expr)) {
                     List<VariableMapping> variableMappings = new ArrayList<VariableMapping>();

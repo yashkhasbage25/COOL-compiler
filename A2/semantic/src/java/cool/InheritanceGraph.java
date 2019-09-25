@@ -142,7 +142,6 @@ public class InheritanceGraph {
 			return true;
 		if (class2 == null)
 			return false;
-		System.out.println(class1 + "****" + class2);
 		while (class1 != null) {
 			if (class1.equals(class2)) {
 				return true;

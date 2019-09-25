@@ -34,7 +34,7 @@ class Vertex {
 
 public class InheritanceGraph {
 	private Map<String, Vertex> name2Vertex;
-	private List<Vertex> vertices;
+	public Set<Vertex> vertices;
 	public Map<String, String> parentNameMap;
 
 	public String Root;
@@ -42,7 +42,7 @@ public class InheritanceGraph {
 	public InheritanceGraph() {
 		name2Vertex = new HashMap<String, Vertex>();
 		parentNameMap = new HashMap<String, String>();
-		vertices = new ArrayList<Vertex>();
+		vertices = new HashSet<Vertex>();
 		Root = "Object";
 	}
 
@@ -69,8 +69,19 @@ public class InheritanceGraph {
 	}
 
 	public void addEdge(String start, String end) {
-		Vertex u = new Vertex(start);
-		Vertex v = new Vertex(end);
+		Vertex u, v;
+		if (name2Vertex.containsKey(start))
+			u = getVertex(start);
+		else
+			u = new Vertex(start);
+
+		if (name2Vertex.containsKey(end))
+			v = getVertex(end);
+		else
+			v = new Vertex(end);
+
+		vertices.add(u);
+		vertices.add(v);
 		addVertexToMap(start, u);
 		addVertexToMap(end, v);
 		u.add_neighbour(v);
@@ -79,8 +90,9 @@ public class InheritanceGraph {
 
 	public boolean cyclePresent() {
 		Map<Vertex, Integer> colour = new HashMap<Vertex, Integer>();
-		for (Vertex v : vertices)
+		for (Vertex v : vertices) {
 			colour.put(v, 0);
+		}
 		for (Vertex v : vertices) {
 			if (dfs(v, colour) == true)
 				return true;
@@ -92,8 +104,8 @@ public class InheritanceGraph {
 		colour.replace(v, 1);
 		for (Vertex k : v.children) {
 			if (colour.get(k) == 1)
-				return false;
-			if (colour.get(k) == 0 && dfs(k, colour))
+				return true;
+			else if (colour.get(k) == 0 && dfs(k, colour))
 				return true;
 		}
 		colour.replace(v, 2);
@@ -130,8 +142,9 @@ public class InheritanceGraph {
 			return true;
 		if (class2 == null)
 			return false;
+		System.out.println(class1 + "****" + class2);
 		while (class1 != null) {
-			if (class1 == class2) {
+			if (class1.equals(class2)) {
 				return true;
 			}
 			class1 = parentNameMap.get(class1);

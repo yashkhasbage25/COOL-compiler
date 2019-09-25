@@ -10,9 +10,9 @@ import cool.VariableMapping;
 class TypeChecker {
 
     private void reportError(String filename, int lineNo, String error) {
-		Semantic.typeCheckErrorFlag = true;
-		System.err.println(filename + ":" + lineNo + ": " + error);
-	}
+        Semantic.typeCheckErrorFlag = true;
+        System.err.println(filename + ":" + lineNo + ": " + error);
+    }
 
     private boolean nonIntegerExpression(AST.expression e1, AST.expression e2) {
         return !CoolUtils.INT_TYPE_STR.equals(e1.type) || !CoolUtils.INT_TYPE_STR.equals(e2.type);
@@ -49,8 +49,6 @@ class TypeChecker {
                     reportError(programClass.filename, programClass.lineNo,
                             "Inferred return type " + T0_prime_string + " method " + methodNode.name
                                     + " does not conform to declared return type " + methodNode.typeid);
-                } else {
-                    reportError(programClass.filename, programClass.lineNo, "Reached a forbidden point.");
                 }
             }
         }
@@ -65,8 +63,8 @@ class TypeChecker {
             String T0 = classAttrName2Type.get(attrNode.name);
             if (T0 == null) {
                 reportError(programClass.name, programClass.lineNo,
-                        "Attribute with type '" + T0
-                                + "' in classInfo.attrInfo is not equal to declared type " + attrNode.typeid
+                        "Attribute with type '" + T0 + "' in classInfo.attrInfo is not equal to declared type "
+                                + attrNode.typeid
                                 + ". This maybe caused due to multiple definitions or inherited variables");
             } else {
                 if (!(attrNode.value instanceof AST.no_expr)) {
@@ -383,8 +381,8 @@ class TypeChecker {
         }
 
         if (!classInfo.Graph.conforms(T0, staticDispatchNode.typeid)) {
-            reportError(programClass.filename, staticDispatchNode.lineNo,
-                    "Exrpession type " + T0 + " does not conform to declared " + "static dispatch type" + staticDispatchNode.typeid);
+            reportError(programClass.filename, staticDispatchNode.lineNo, "Exrpession type " + T0
+                    + " does not conform to declared " + "static dispatch type" + staticDispatchNode.typeid);
         }
 
         Map<String, List<String>> method2Args = classInfo.methodInfo.lookUpGlobal(staticDispatchNode.typeid);
@@ -433,10 +431,11 @@ class TypeChecker {
                     + programClass.name + " was not found in classInfo.methodInfo ");
             dispatchNode.type = CoolUtils.OBJECT_TYPE_STR;
         } else {
-            System.out.println(431);
+            // System.out.println(431);
             List<String> formalTypes = CoolUtils.getFormalList(dispatchNode.name, classInfo.ClassNameMap.get(T0_prime),
                     classInfo);
-            System.out.println(439);System.out.println(dispatchNode.name); System.out.println(classInfo.ClassNameMap.get(T0_prime).name);  
+            // System.out.println(439);System.out.println(dispatchNode.name);
+            // System.out.println(classInfo.ClassNameMap.get(T0_prime).name);
 
             if (formalTypes == null) {
                 reportError(programClass.filename, dispatchNode.lineNo,

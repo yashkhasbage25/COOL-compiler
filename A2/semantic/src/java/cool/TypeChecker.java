@@ -286,11 +286,11 @@ class TypeChecker {
         CoolUtils.createNewObjectScope(classInfo.attrInfo, programClass, variableMapping);
         // recurse typecheker over body of let node
         new TypeChecker(letNode.body, classInfo, programClass);
-        letNode.type = node.body.type;
+        letNode.type = letNode.body.type;
         classInfo.attrInfo.exitScope();
     }
 
-    // type checker for condition node
+    // type checker for condition letNode
     TypeChecker(AST.cond condNode, ClassInfo classInfo, class_ programClass) {
         // recurse type checker for predicate
         new TypeChecker(condNode.predicate, classInfo, programClass);

@@ -1,11 +1,14 @@
 package cool;
 
-import java.util.*;
-import cool.VariableMapping;
-import cool.AST.class_;
 import cool.AST;
+import java.util.*;
+import cool.AST.class_;
+import cool.VariableMapping;
 
 class CoolUtils {
+
+    // some string constants to be used throughout the cool package
+    // these are of the form: default class/type name -> class name
     static final String INT_TYPE_STR = "Int";
     static final String STRING_TYPE_STR = "String";
     static final String OBJECT_TYPE_STR = "Object";
@@ -13,12 +16,15 @@ class CoolUtils {
     static final String IO_TYPE_STR = "IO";
     static final String BOOL_TYPE_STR = "Bool";
     static final String SELF_TYPE_STR = "SELF_TYPE";
-
+    // the only default function name
     static final String MAIN_FN_STR = "main";
 
+
+    // creates new scope of objects in a new scope
     public static void createNewObjectScope(ScopeTable<Map<String, String>> attrInfo, class_ programClass,
-            List<VariableMapping> variableMapping) {
+        List<VariableMapping> variableMapping) {
         Map<String, String> newAttrTypeMap = new HashMap<String, String>();
+        // put all class attributes in that scope
         newAttrTypeMap.putAll(attrInfo.lookUpGlobal(programClass.name));
         for (int i = 0; i < variableMapping.size(); i++) {
             newAttrTypeMap.put(variableMapping.get(i).getLeftString(), variableMapping.get(i).getRightString());
@@ -28,8 +34,6 @@ class CoolUtils {
     }
 
     public static List<String> getFormalList(String methodName, class_ programClass, ClassInfo classInfo) {
-        // System.out.println(31);
-        // System.out.println(classInfo.methodInfo.lookUpGlobal(programClass.name));
         if (classInfo.methodInfo.lookUpGlobal(programClass.name) != null
                 && classInfo.methodInfo.lookUpGlobal(programClass.name).get(methodName) != null) {
             return classInfo.methodInfo.lookUpGlobal(programClass.name).get(methodName);

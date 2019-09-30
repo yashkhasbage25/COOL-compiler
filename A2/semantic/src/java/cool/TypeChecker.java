@@ -298,19 +298,12 @@ class TypeChecker {
             reportError(programClass.filename, condNode.lineNo, "Predicate of conditional must be of Bool type");
             condNode.type = CoolUtils.OBJECT_TYPE_STR;
         }
-<<<<<<< HEAD
         // recurse type checker of if body
         new TypeChecker(condNode.ifbody, classInfo, programClass);
         // recurse type checker of else body
         new TypeChecker(condNode.elsebody, classInfo, programClass);
         // deciding type of conditional statement
         condNode.type = classInfo.Graph.LowestCommonAncestor(condNode.ifbody.type, condNode.elsebody.type); // check again
-=======
-        new TypeChecker(node.ifbody, classInfo, programClass);
-        new TypeChecker(node.elsebody, classInfo, programClass);
-        node.type = classInfo.Graph.LowestCommonAncestor(node.ifbody.type, node.elsebody.type); // check again
-        System.out.println(node.ifbody.type + " " + node.elsebody.type + " " + node.type);
->>>>>>> eb2c215ea78e9cd41314e286e9a20c7e8e75c609
     }
 
     // type checker for loop Node
@@ -422,7 +415,6 @@ class TypeChecker {
         negNode.type = CoolUtils.INT_TYPE_STR;
     }
 
-<<<<<<< HEAD
     // type checker for eq node
     TypeChecker(AST.eq eqNode, ClassInfo classInfo, class_ programClass) { // check again
         // type checker for eq node
@@ -439,21 +431,6 @@ class TypeChecker {
                 reportError(programClass.filename, eqNode.lineNo, "Illegal comparison with a basic type.");
             else
                 reportError(programClass.filename, eqNode.lineNo,
-=======
-    TypeChecker(AST.eq node, ClassInfo classInfo, class_ programClass) { // check again
-        new TypeChecker(node.e1, classInfo, programClass);
-        new TypeChecker(node.e2, classInfo, programClass);
-        if (!node.e1.type.equals(node.e2.type)) {
-            boolean exp1 = CoolUtils.INT_TYPE_STR.equals(node.e1.type) || CoolUtils.BOOL_TYPE_STR.equals(node.e1.type)
-                    || CoolUtils.STRING_TYPE_STR.equals(node.e1.type);
-            boolean exp2 = CoolUtils.INT_TYPE_STR.equals(node.e2.type) || CoolUtils.BOOL_TYPE_STR.equals(node.e2.type)
-                    || CoolUtils.STRING_TYPE_STR.equals(node.e2.type);
-
-            if (exp1 && exp2)
-                reportError(programClass.filename, node.lineNo, "Illegal comparison with a basic type.");
-            else if (exp1 || exp2)
-                reportError(programClass.filename, node.lineNo,
->>>>>>> eb2c215ea78e9cd41314e286e9a20c7e8e75c609
                         "Illegal comparison with a basic type with non basic types.");
         }
         eqNode.type = CoolUtils.BOOL_TYPE_STR;

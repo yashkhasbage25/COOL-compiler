@@ -3,42 +3,45 @@ package cool;
 import java.util.*;
 import cool.CoolUtils;
 
+// Vertex Class (Vertex of InheritanceGraph)
 class Vertex {
 
 	private String name;
 	private Vertex parent;
 	public List<Vertex> children;
 
+	// constructor for vertex class with name of class
 	public Vertex(String node_name) {
 		this.name = node_name;
 		this.children = new ArrayList<>();
 		this.parent = null;
 	}
 
+	// returns name of vertex
 	public String getName() {
 		return name;
 	}
 
+	// retursns if the name of node is same as this vertex
 	public boolean equals(Vertex node) {
 		return this.name == node.getName();
 	}
 
+	// add neighbours to the adjacency list of this vertex
 	public void add_neighbour(Vertex node) {
 		children.add(node);
 	}
-
-	public void clear() {
-		// clear children list
-	}
 }
 
+// Inheritance Graph Class
 public class InheritanceGraph {
-	private Map<String, Vertex> name2Vertex;
-	public Set<Vertex> vertices;
-	public Map<String, String> parentNameMap;
+	private Map<String, Vertex> name2Vertex; // a map from vertex name to vertex
+	public Set<Vertex> vertices; // set of all vertices in the graph
+	public Map<String, String> parentNameMap; // map of name of parent given a vertex
 
-	public String Root;
+	public String Root; // root of the InheritanceGraph which is "Object"
 
+	// Constructor for InheritanceGraph
 	public InheritanceGraph() {
 		name2Vertex = new HashMap<String, Vertex>();
 		parentNameMap = new HashMap<String, String>();
@@ -46,28 +49,27 @@ public class InheritanceGraph {
 		Root = "Object";
 	}
 
+	// checks whether class is present
 	public boolean checkClass(String classname) {
 		return name2Vertex.containsKey(classname);
 	}
 
+	// given the name of vertex returns the vertex
 	private Vertex getVertex(String name) {
 		return name2Vertex.get(name);
 	}
 
+	// add vertex to map
 	private void addVertexToMap(String name, Vertex v) {
 		name2Vertex.put(name, v);
 	}
 
+	// adds parent to map
 	private void addParentToMap(String name, String par_name) {
 		parentNameMap.put(name, par_name);
 	}
 
-	public void ClearGraph() {
-		for (Vertex v : vertices) {
-			v.clear(); // clear the adjacency list for each Vertex
-		}
-	}
-
+	// add edge between 2 vertices in graph
 	public void addEdge(String start, String end) {
 		Vertex u, v;
 		if (name2Vertex.containsKey(start))
@@ -88,18 +90,27 @@ public class InheritanceGraph {
 		parentNameMap.put(end, start);
 	}
 
-	public boolean cyclePresent() {
+	// checks whether cycle is present in inheritance graph
+	public Set<String> cyclePresent() {
+		Set<String> nodes = new HashSet<String>();
 		Map<Vertex, Integer> colour = new HashMap<Vertex, Integer>();
 		for (Vertex v : vertices) {
 			colour.put(v, 0);
 		}
 		for (Vertex v : vertices) {
-			if (dfs(v, colour) == true)
-				return true;
+			if (dfs(v, colour) == true) {
+				Set<Vertex> nodesInCycle = colour.keySet();
+				for (Vertex k : nodesInCycle) {
+					nodes.add(k.getName());
+				}
+			}
 		}
-		return false;
+		// for (String l : nodes)
+		// System.out.println(l);
+		return nodes;
 	}
 
+	// we use colors to get cycle in directed graph
 	public boolean dfs(Vertex v, Map<Vertex, Integer> colour) {
 		colour.replace(v, 1);
 		for (Vertex k : v.children) {
@@ -112,6 +123,7 @@ public class InheritanceGraph {
 		return false;
 	}
 
+	// gives the lowestCommonAncestor between 2 vertices
 	public String LowestCommonAncestor(String u, String v) {
 
 		Stack<String> path_to_u = new Stack<String>();
@@ -143,6 +155,7 @@ public class InheritanceGraph {
 		}
 	}
 
+	// checks if classes conforms
 	public boolean conforms(String class1, String class2) {
 		if (class1.equals("no_type"))
 			return true;

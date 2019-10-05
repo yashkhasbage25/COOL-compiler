@@ -52,10 +52,15 @@ public class Semantic {
 
 	// this runs cycle checker and reports cycle
 	private void runCycleReporter(AST.program program) {
-		boolean flag = classInfo.Graph.cyclePresent();
+		Set<String> nodes = new HashSet<String>();
+		nodes = classInfo.Graph.cyclePresent();
+		boolean flag = (nodes.size() != 0);
 		errorFlag = errorFlag || flag;
 		if (flag) {
-			reportError(program.classes.get(0).filename, 0, "Cycle detected");
+			for (String k : nodes)
+				reportError(program.classes.get(0).filename, 0, "Class " + k + " is part of a cycle");
+			System.exit(1); // we will have to exit otherwise it would run into infinite loop while taking
+							// parents succesively
 		}
 	}
 
@@ -167,7 +172,6 @@ public class Semantic {
 
 			Map<String, List<String>> classMethodName2Args = new HashMap<String, List<String>>();
 			Map<String, String> classAttrName2Type = new HashMap<String, String>();
-
 			// analyze class features
 			for (AST.feature classFeature : programClass.features) {
 				if (classFeature instanceof AST.attr) {
@@ -177,7 +181,7 @@ public class Semantic {
 						reportError(programClass.filename, classFeature.lineNo,
 								"Attribute " + classAttr.name.toString() + " is redefined.");
 						errorFlag = true;
-					// check if the inherited attrbute is redefined
+						// check if the inherited attrbute is redefined
 					} else if (isAttrInherited(classAttr, programClass, classInfo)) {
 						reportError(programClass.filename, classFeature.lineNo,
 								"Attribute " + classAttr + " was inherited but still redefined.");
@@ -245,7 +249,7 @@ public class Semantic {
 				}
 			}
 			String className = programClass.name;
-			System.out.println("225 " + classMethodName2Args);
+			// System.out.println("225 " + classMethodName2Args);
 			classInfo.methodInfo.insert(className, classMethodName2Args);
 			classInfo.attrInfo.insert(className, classAttrName2Type);
 		}

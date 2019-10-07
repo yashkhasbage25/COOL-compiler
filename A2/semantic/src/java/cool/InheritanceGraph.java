@@ -101,7 +101,8 @@ public class InheritanceGraph {
 			if (dfs(v, colour) == true) {
 				Set<Vertex> nodesInCycle = colour.keySet();
 				for (Vertex k : nodesInCycle) {
-					nodes.add(k.getName());
+					if (colour.get(k) == 1)
+						nodes.add(k.getName());
 				}
 			}
 		}
@@ -114,6 +115,9 @@ public class InheritanceGraph {
 	public boolean dfs(Vertex v, Map<Vertex, Integer> colour) {
 		colour.replace(v, 1);
 		for (Vertex k : v.children) {
+			if (k.getName().equals(v.getName())) {
+				return true;
+			}
 			if (colour.get(k) == 1)
 				return true;
 			else if (colour.get(k) == 0 && dfs(k, colour))
@@ -138,17 +142,11 @@ public class InheritanceGraph {
 			path_to_v.push(iter);
 			iter = parentNameMap.get(iter);
 		}
-		System.out.println(path_to_u);
-		System.out.println(path_to_v);
-		// System.out.println(u + " " + v);
 		String prev = Root;
 		while (true) {
-			// System.out.println(path_to_v.peek() + path_to_u.peek() +
-			// (path_to_v.peek().equals(path_to_u.peek())));
 			if (!path_to_v.empty() && !path_to_u.empty() && (path_to_v.peek().equals(path_to_u.peek()))) {
 				prev = path_to_v.peek();
 				path_to_v.pop();
-				System.out.println(prev + "??");
 				path_to_u.pop();
 			} else
 				return prev;

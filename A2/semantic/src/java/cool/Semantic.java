@@ -58,7 +58,8 @@ public class Semantic {
 		errorFlag = errorFlag || flag;
 		if (flag) {
 			for (String k : nodes)
-				reportError(program.classes.get(0).filename, 0, "Class " + k + " is part of a cycle");
+				reportError(program.classes.get(0).filename, 0,
+						"Class " + k + " ,or an ancestor of " + k + " is involved in an inheritance cycle.");
 			System.exit(1); // we will have to exit otherwise it would run into infinite loop while taking
 							// parents succesively
 		}
@@ -184,7 +185,7 @@ public class Semantic {
 						// check if the inherited attrbute is redefined
 					} else if (isAttrInherited(classAttr, programClass, classInfo)) {
 						reportError(programClass.filename, classFeature.lineNo,
-								"Attribute " + classAttr + " was inherited but still redefined.");
+								"Attribute " + classAttr.name.toString() + " was inherited but still redefined.");
 						errorFlag = true;
 					} else {
 						// if the above two checks are passed by class attribute

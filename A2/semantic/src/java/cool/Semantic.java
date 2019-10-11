@@ -349,5 +349,4 @@ public class Semantic {
 			}
 		}
 		return valid;
-	}
 }

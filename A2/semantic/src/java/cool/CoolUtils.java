@@ -33,11 +33,15 @@ class CoolUtils {
         attrInfo.insert(programClass.name, newAttrTypeMap);
     }
 
+    // get formals of a method from the class itself or the parent classes
     public static List<String> getFormalList(String methodName, class_ programClass, ClassInfo classInfo) {
+        // check if the method is in the programClass itself
         if (classInfo.methodInfo.lookUpGlobal(programClass.name) != null
                 && classInfo.methodInfo.lookUpGlobal(programClass.name).get(methodName) != null) {
             return classInfo.methodInfo.lookUpGlobal(programClass.name).get(methodName);
         }
+
+        // check in parents
         String parentName = classInfo.Graph.parentNameMap.get(programClass.name);
         while (parentName != null) {
             class_ parent = classInfo.ClassNameMap.get(parentName);
@@ -52,6 +56,7 @@ class CoolUtils {
         return null;
     }
 
+    // get type of some attribute in programClass or in parent class
     public static String attrType(String attrName, class_ programClass, ClassInfo classInfo) {
         if (classInfo.attrInfo.lookUpGlobal(programClass.name) != null
                 && (classInfo.attrInfo.lookUpGlobal(programClass.name)).get(attrName) != null)

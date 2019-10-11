@@ -174,81 +174,8 @@ public class Semantic {
 			Map<String, List<String>> classMethodName2Args = new HashMap<String, List<String>>();
 			Map<String, String> classAttrName2Type = new HashMap<String, String>();
 			// analyze class features
-			for (AST.feature classFeature : programClass.features) {
-				if (classFeature instanceof AST.attr) {
-					AST.attr classAttr = (AST.attr) classFeature;
-					// check for attribute redefinition
-					if (classAttrName2Type.containsKey(classAttr.name)) {
-						reportError(programClass.filename, classFeature.lineNo,
-								"Attribute " + classAttr.name.toString() + " is redefined.");
-						errorFlag = true;
-						// check if the inherited attrbute is redefined
-					} else if (isAttrInherited(classAttr, programClass, classInfo)) {
-						reportError(programClass.filename, classFeature.lineNo,
-								"Attribute " + classAttr.name.toString() + " was inherited but still redefined.");
-						errorFlag = true;
-					} else {
-						// if the above two checks are passed by class attribute
-						// then attribute can be passed for further analysis
-						classAttrName2Type.put(classAttr.name, classAttr.typeid);
-					}
-				} else if (classFeature instanceof AST.method) {
-					AST.method classMethod = (AST.method) classFeature;
-					// check for method redefinition
-					if (classMethodName2Args.containsKey(classMethod.name)) {
-						reportError(programClass.filename, classFeature.lineNo,
-								"Method " + classMethod.name + " is redefined.");
-						errorFlag = true;
-					} else {
-						List<String> argTypeList = new ArrayList<String>();
-						Set<String> argFormalNames = new HashSet<String>();
-						for (AST.formal arg : classMethod.formals) {
-							if (argFormalNames.contains(arg.name)) {
-								// check if a variable name was repeated in
-								// formal arguments
-								reportError(programClass.filename, classFeature.lineNo,
-										"Formal argument " + arg.name + " was reused in definition of "
-												+ classMethod.name + " in class " + programClass.name);
-								errorFlag = true;
-							} else {
-								// formal parameter cannot have type SELF_TYPE
-								argFormalNames.add(arg.name);
-								if (arg.typeid.equals(CoolUtils.SELF_TYPE_STR)) {
-									reportError(programClass.filename, classFeature.lineNo,
-											"Formal parameter in definition of " + classMethod.name + " of class "
-													+ programClass.name + " cannot have type 'SELF_TYPE'");
-									errorFlag = true;
-								} else {
-									// if the formalparameters pass the above
-									// checks then it can be passed on to
-									// method details for further semantic
-									// checks
-									argTypeList.add(arg.typeid);
-								}
-							}
-						}
-						// if the method passes all the above checks
-						// then it can be passed on for further
-						// semantic checks
-						argTypeList.add(classMethod.typeid);
+			analyzeClassFeatures(AST.class_ programClass);
 
-						// check for main class and main method in main class
-						classMethodName2Args.put(classMethod.name, argTypeList);
-						if (programClass.name.equals(CoolUtils.MAIN_TYPE_STR)) {
-							foundMain = true;
-							if (classMethod.name.equals(CoolUtils.MAIN_FN_STR)) {
-								foundmain = true;
-								mainHasArgs = (argTypeList.size() == 1);
-							}
-						}
-					}
-
-				} else {
-					// a class featrue can only be either a method or attribute
-					reportError(programClass.filename, programClass.lineNo, "Reached a forbidden line.");
-					errorFlag = true;
-				}
-			}
 			String className = programClass.name;
 			// System.out.println("225 " + classMethodName2Args);
 			classInfo.methodInfo.insert(className, classMethodName2Args);
@@ -318,6 +245,85 @@ public class Semantic {
 			programClassParent = classInfo.Graph.parentNameMap.get(programClassParent);
 		}
 		return false;
+	}
+
+	// analyze and check class features given a program class
+	private boolean analyzeClassFeatures(AST.class_ programClass) {
+		for (AST.feature classFeature : programClass.features) {
+			if (classFeature instanceof AST.attr) {
+				AST.attr classAttr = (AST.attr) classFeature;
+				// check for attribute redefinition
+				if (classAttrName2Type.containsKey(classAttr.name)) {
+					reportError(programClass.filename, classFeature.lineNo,
+							"Attribute " + classAttr.name.toString() + " is redefined.");
+					errorFlag = true;
+					// check if the inherited attrbute is redefined
+				} else if (isAttrInherited(classAttr, programClass, classInfo)) {
+					reportError(programClass.filename, classFeature.lineNo,
+							"Attribute " + classAttr.name.toString() + " was inherited but still redefined.");
+					errorFlag = true;
+				} else {
+					// if the above two checks are passed by class attribute
+					// then attribute can be passed for further analysis
+					classAttrName2Type.put(classAttr.name, classAttr.typeid);
+				}
+			} else if (classFeature instanceof AST.method) {
+				AST.method classMethod = (AST.method) classFeature;
+				// check for method redefinition
+				if (classMethodName2Args.containsKey(classMethod.name)) {
+					reportError(programClass.filename, classFeature.lineNo,
+							"Method " + classMethod.name + " is redefined.");
+					errorFlag = true;
+				} else {
+					List<String> argTypeList = new ArrayList<String>();
+					Set<String> argFormalNames = new HashSet<String>();
+					for (AST.formal arg : classMethod.formals) {
+						if (argFormalNames.contains(arg.name)) {
+							// check if a variable name was repeated in
+							// formal arguments
+							reportError(programClass.filename, classFeature.lineNo,
+									"Formal argument " + arg.name + " was reused in definition of "
+											+ classMethod.name + " in class " + programClass.name);
+							errorFlag = true;
+						} else {
+							// formal parameter cannot have type SELF_TYPE
+							argFormalNames.add(arg.name);
+							if (arg.typeid.equals(CoolUtils.SELF_TYPE_STR)) {
+								reportError(programClass.filename, classFeature.lineNo,
+										"Formal parameter in definition of " + classMethod.name + " of class "
+												+ programClass.name + " cannot have type 'SELF_TYPE'");
+								errorFlag = true;
+							} else {
+								// if the formalparameters pass the above
+								// checks then it can be passed on to
+								// method details for further semantic
+								// checks
+								argTypeList.add(arg.typeid);
+							}
+						}
+					}
+					// if the method passes all the above checks
+					// then it can be passed on for further
+					// semantic checks
+					argTypeList.add(classMethod.typeid);
+
+					// check for main class and main method in main class
+					classMethodName2Args.put(classMethod.name, argTypeList);
+					if (programClass.name.equals(CoolUtils.MAIN_TYPE_STR)) {
+						foundMain = true;
+						if (classMethod.name.equals(CoolUtils.MAIN_FN_STR)) {
+							foundmain = true;
+							mainHasArgs = (argTypeList.size() == 1);
+						}
+					}
+				}
+			} else {
+				// a class featrue can only be either a method or attribute
+				reportError(programClass.filename, programClass.lineNo, "Reached a forbidden line.");
+				errorFlag = true;
+			}
+		}
+		return errorFlag;
 	}
 
 	// check for method overridding method redefinition while inheritance

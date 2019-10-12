@@ -264,7 +264,6 @@ class TypeChecker {
             for (int i = 1; i < typcases.size(); i++) {
                 String type1 = typcases.get(i);
                 case_type0 = classInfo.Graph.LowestCommonAncestor(type1, case_type0);
-                // check again
             }
             typcaseNode.type = case_type0;
         }

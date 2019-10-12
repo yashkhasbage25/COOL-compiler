@@ -220,7 +220,11 @@ class TypeChecker {
 
         else if (expressionNode instanceof AST.string_const)
             new TypeChecker((AST.string_const) expressionNode, classInfo, programClass);
-
+        else {
+            reportError(programClass.filename, expressionNode.lineNo,
+                "The type of expressionNode did not match any type in TypeChecker if-else ladder"
+            );
+        }
     }
 
     TypeChecker(AST.typcase typcaseNode, ClassInfo classInfo, class_ programClass) {

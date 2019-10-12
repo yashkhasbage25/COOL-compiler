@@ -120,12 +120,7 @@ public class Semantic {
 	private boolean classInheritanceNotPossible(class_ programClass) {
 		Boolean notPossible = false;
 		String parentClassName = programClass.parent;
-		if (parentClassName.equals(CoolUtils.SELF_TYPE_STR)) {
-			// self cannot be parent class
-			reportError(programClass.filename, programClass.lineNo, "Parent class cannot be SELF_TYPE");
-			errorFlag = true;
-			notPossible = true;
-		} else if (parentClassName.equals(CoolUtils.INT_TYPE_STR) || parentClassName.equals(CoolUtils.STRING_TYPE_STR)
+		if (parentClassName.equals(CoolUtils.INT_TYPE_STR) || parentClassName.equals(CoolUtils.STRING_TYPE_STR)
 				|| parentClassName.equals(CoolUtils.BOOL_TYPE_STR)) {
 			reportError(programClass.filename, programClass.lineNo, "Class " + parentClassName
 					+ " can never be inherited. Attempt to inherit by class " + programClass.name);
@@ -175,7 +170,7 @@ public class Semantic {
 			Map<String, String> classAttrName2Type = new HashMap<String, String>();
 			// analyze class features
 			for (AST.feature classFeature : programClass.features) {
-            	if (classFeature instanceof AST.method) {
+				if (classFeature instanceof AST.method) {
 					AST.method classMethod = (AST.method) classFeature;
 					// check for method redefinition
 					if (classMethodName2Args.containsKey(classMethod.name)) {
@@ -194,20 +189,13 @@ public class Semantic {
 												+ classMethod.name + " in class " + programClass.name);
 								errorFlag = true;
 							} else {
-								// formal parameter cannot have type SELF_TYPE
 								argFormalNames.add(arg.name);
-								if (arg.typeid.equals(CoolUtils.SELF_TYPE_STR)) {
-									reportError(programClass.filename, classFeature.lineNo,
-											"Formal parameter in definition of " + classMethod.name + " of class "
-													+ programClass.name + " cannot have type 'SELF_TYPE'");
-									errorFlag = true;
-								} else {
-									// if the formalparameters pass the above
-									// checks then it can be passed on to
-									// method details for further semantic
-									// checks
-									argTypeList.add(arg.typeid);
-								}
+								// if the formalparameters pass the above
+								// checks then it can be passed on to
+								// method details for further semantic
+								// checks
+								argTypeList.add(arg.typeid);
+
 							}
 						}
 						// if the method passes all the above checks

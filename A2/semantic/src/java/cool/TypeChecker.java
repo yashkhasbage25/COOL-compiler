@@ -20,7 +20,8 @@ class TypeChecker {
     // check if both expressions are integers, because expression are allowed
     // only for integers
     private boolean nonIntegerExpression(AST.expression leftExpression, AST.expression rightExpression) {
-        return !CoolUtils.INT_TYPE_STR.equals(leftExpression.type) || !CoolUtils.INT_TYPE_STR.equals(rightExpression.type);
+        return !CoolUtils.INT_TYPE_STR.equals(leftExpression.type)
+                || !CoolUtils.INT_TYPE_STR.equals(rightExpression.type);
     }
 
     // type checker for AST.method
@@ -42,7 +43,6 @@ class TypeChecker {
             } else {
                 // introduce identifiers ans their types
                 List<VariableMapping> variableMapping = new ArrayList<VariableMapping>();
-                variableMapping.add(new VariableMapping("self", programClass.name));
                 for (AST.formal methodFormal : methodNode.formals) {
                     String name = methodFormal.name;
                     String type = methodFormal.typeid;
@@ -141,8 +141,10 @@ class TypeChecker {
                 if (classInfo.Graph.conforms(assignNode.e1.type, type)) {
                     assignNode.type = type_prime;
                 } else {
-                    reportError(programClass.filename, assignNode.lineNo, "LHS : " + type + " RHS :" + type_prime
-                            + " Type of expression does not conform to type of attribute for identifier " + assignNode.name);
+                    reportError(programClass.filename, assignNode.lineNo,
+                            "LHS : " + type + " RHS :" + type_prime
+                                    + " Type of expression does not conform to type of attribute for identifier "
+                                    + assignNode.name);
                     assignNode.type = assignNode.e1.type;
                 }
             }
@@ -222,8 +224,7 @@ class TypeChecker {
             new TypeChecker((AST.string_const) expressionNode, classInfo, programClass);
         else {
             reportError(programClass.filename, expressionNode.lineNo,
-                "The type of expressionNode did not match any type in TypeChecker if-else ladder"
-            );
+                    "The type of expressionNode did not match any type in TypeChecker if-else ladder");
         }
     }
 
@@ -250,7 +251,7 @@ class TypeChecker {
             }
 
             AST.expression branchExpression = typcaseBranch.value;
-            //recurse type checker over expression of branch
+            // recurse type checker over expression of branch
             new TypeChecker(branchExpression, classInfo, programClass);
             String type_case = branchExpression.type;
             typcases.add(type_case);
@@ -306,7 +307,8 @@ class TypeChecker {
         // recurse type checker of else body
         new TypeChecker(condNode.elsebody, classInfo, programClass);
         // deciding type of conditional statement
-        condNode.type = classInfo.Graph.LowestCommonAncestor(condNode.ifbody.type, condNode.elsebody.type); // check again
+        condNode.type = classInfo.Graph.LowestCommonAncestor(condNode.ifbody.type, condNode.elsebody.type); // check
+                                                                                                            // again
     }
 
     // type checker for loop Node
@@ -392,7 +394,7 @@ class TypeChecker {
         if (nonIntegerExpression(ltNode.e1, ltNode.e2)) {
             reportError(programClass.filename, ltNode.lineNo, "less-than operator requires non-Int arguments");
         }
-        ltNode.type = CoolUtils.INT_TYPE_STR;
+        ltNode.type = CoolUtils.BOOL_TYPE_STR;
     }
 
     // type checker for leq
@@ -404,7 +406,7 @@ class TypeChecker {
         if (nonIntegerExpression(node.e1, node.e2)) {
             reportError(programClass.filename, node.lineNo, "less-than equal operator requires non-Int arguments");
         }
-        node.type = CoolUtils.INT_TYPE_STR;
+        node.type = CoolUtils.BOOL_TYPE_STR;
     }
 
     // type checker for neg node
@@ -426,13 +428,15 @@ class TypeChecker {
         // check for type of e1 and e2
         if (!eqNode.e1.type.equals(eqNode.e2.type)) {
             // comparison is only allowed for int bool and string
-            boolean exp1 = CoolUtils.INT_TYPE_STR.equals(eqNode.e1.type) || CoolUtils.BOOL_TYPE_STR.equals(eqNode.e1.type)
+            boolean exp1 = CoolUtils.INT_TYPE_STR.equals(eqNode.e1.type)
+                    || CoolUtils.BOOL_TYPE_STR.equals(eqNode.e1.type)
                     || CoolUtils.STRING_TYPE_STR.equals(eqNode.e1.type);
-            boolean exp2 = CoolUtils.INT_TYPE_STR.equals(eqNode.e2.type) || CoolUtils.BOOL_TYPE_STR.equals(eqNode.e2.type)
+            boolean exp2 = CoolUtils.INT_TYPE_STR.equals(eqNode.e2.type)
+                    || CoolUtils.BOOL_TYPE_STR.equals(eqNode.e2.type)
                     || CoolUtils.STRING_TYPE_STR.equals(eqNode.e2.type);
             if (exp1 && exp2)
                 reportError(programClass.filename, eqNode.lineNo, "Illegal comparison with a basic type.");
-            else
+            else if (exp1 || exp2)
                 reportError(programClass.filename, eqNode.lineNo,
                         "Illegal comparison with a basic type with non basic types.");
         }

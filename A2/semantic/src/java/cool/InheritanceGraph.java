@@ -106,8 +106,6 @@ public class InheritanceGraph {
 				}
 			}
 		}
-		// for (String l : nodes)
-		// System.out.println(l);
 		return nodes;
 	}
 

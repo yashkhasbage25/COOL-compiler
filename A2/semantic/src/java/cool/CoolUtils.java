@@ -15,14 +15,12 @@ class CoolUtils {
     static final String MAIN_TYPE_STR = "Main";
     static final String IO_TYPE_STR = "IO";
     static final String BOOL_TYPE_STR = "Bool";
-    static final String SELF_TYPE_STR = "SELF_TYPE";
     // the only default function name
     static final String MAIN_FN_STR = "main";
 
-
     // creates new scope of objects in a new scope
     public static void createNewObjectScope(ScopeTable<Map<String, String>> attrInfo, class_ programClass,
-        List<VariableMapping> variableMapping) {
+            List<VariableMapping> variableMapping) {
         Map<String, String> newAttrTypeMap = new HashMap<String, String>();
         // put all class attributes in that scope
         newAttrTypeMap.putAll(attrInfo.lookUpGlobal(programClass.name));

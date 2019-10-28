@@ -18,7 +18,7 @@ public class Codegen {
 		nameToIrclassMap = new HashMap<String, IRClass>();
 		addDefaultClasses();
 		buildGraph(program);
-		buildIRClassMap();
+		buildIRClassMap(out);
 		// runCodeGenerator();
 	}
 
@@ -39,28 +39,42 @@ public class Codegen {
 		Graph.addEdge("Object", "IO");
 	}
 
-	private void buildIRClassMap() {
+	private void buildIRClassMap(PrintWriter out) {
 		String root = CoolUtils.OBJECT_TYPE_STR;
 		List<String> dfsOrdering = new ArrayList<>();
 		// gives dfs ordreing to add to classes to map so that parent is already
 		// processed
 		Graph.DfsOrdering(root);
 		dfsOrdering = Graph.getDfsOrder();
-		PrintStructDeclerations(dfsOrdering);
-		PrintMethods(dfsOrdering);
-		PrintConstructor(dfsOrdering);
+		addClassToMap(dfsOrdering);
+		PrintStructDeclerations(dfsOrdering, out);
+		PrintMethods(dfsOrdering, out);
+		PrintConstructor(dfsOrdering, out);
 		// System.out.println(dfsOrdering); works fine
 	}
 
-	private void PrintStructDeclerations(List<String> dfsOrdering) {
+	private void PrintStructDeclerations(List<String> dfsOrdering, PrintWriter out) {
+		System.out.println(dfsOrdering);
+		for (String s : dfsOrdering) {
+			out.print("%class." + s + " = type {");
+			if (s.equals(CoolUtils.OBJECT_TYPE_STR))
+				out.print("i8*");
+			else {
+				out.print(" %class." + Graph.parentNameMap.get(s));
+				for (AST.attr a : nameToIrclassMap.get(s).alist.values()) {
+					out.print(" ," + CoolUtils.printTypes(a.typeid));
+				}
+			}
+			out.println("}");
+
+		}
+	}
+
+	private void PrintMethods(List<String> dfsOrdering, PrintWriter out) {
 
 	}
 
-	private void PrintMethods(List<String> dfsOrdering) {
-
-	}
-
-	private void PrintConstructor(List<String> dfsOrdering) {
+	private void PrintConstructor(List<String> dfsOrdering, PrintWriter out) {
 
 	}
 
@@ -120,7 +134,7 @@ public class Codegen {
 		HashMap<String, AST.method> boolMethods = new HashMap<String, AST.method>();
 		boolMethods = nameToIrclassMap.get("Object").mlist;
 		IRClass irBoolClass = new IRClass("Int", "Object", new HashMap<String, AST.attr>(), boolMethods);
-		nameToIrclassMap.put("Object", irBoolClass);
+		nameToIrclassMap.put("Bool", irBoolClass);
 	}
 
 	public void addStringClass() {

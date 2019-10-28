@@ -18,6 +18,18 @@ class CoolUtils {
     // the only default function name
     static final String MAIN_FN_STR = "main";
 
+    public static String printTypes(String s) {
+        if (s.equals(INT_TYPE_STR))
+            return "i32";
+        else if (s.equals(BOOL_TYPE_STR))
+            return "i8";
+        else if (s.equals(STRING_TYPE_STR))
+            return "i8*";
+        else
+            return "%class." + s;
+
+    }
+
     public static boolean IsDefaultClass(String s) {
         if (s.equals(INT_TYPE_STR) || s.equals(STRING_TYPE_STR) || s.equals(OBJECT_TYPE_STR) || s.equals(BOOL_TYPE_STR)
                 || s.equals(IO_TYPE_STR))

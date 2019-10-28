@@ -6,6 +6,10 @@ class D {
 
 class B inherits A {
     b : Int;
+    cc : String;
+    dd : Bool;
+    ee : Int;
+    ff : D;
     f1(x : Int) : Int {
         0
     };

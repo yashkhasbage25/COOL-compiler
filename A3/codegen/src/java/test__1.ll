@@ -1,0 +1,10 @@
+%class.Object = type {i8*}
+%class.Int = type { %class.Object}
+%class.String = type { %class.Object}
+%class.Bool = type { %class.Object}
+%class.IO = type { %class.Object}
+%class.D = type { %class.Object ,i32 ,i32}
+%class.A = type { %class.D ,i8* ,i8 ,i32 ,%class.D ,i32 ,i32 ,i32}
+%class.B = type { %class.A ,i8* ,i8 ,i32 ,%class.D ,i32 ,i32 ,i32}
+%class.C = type { %class.B ,i8* ,i8 ,i32 ,%class.D ,i32 ,i32 ,i32}
+%class.Main = type { %class.Object ,i32}

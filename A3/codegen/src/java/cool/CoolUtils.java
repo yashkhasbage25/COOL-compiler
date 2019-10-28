@@ -18,6 +18,13 @@ class CoolUtils {
     // the only default function name
     static final String MAIN_FN_STR = "main";
 
+    public static boolean IsDefaultClass(String s) {
+        if (s.equals(INT_TYPE_STR) || s.equals(STRING_TYPE_STR) || s.equals(OBJECT_TYPE_STR) || s.equals(BOOL_TYPE_STR)
+                || s.equals(IO_TYPE_STR))
+            return true;
+        return false;
+    }
+
     // creates new scope of objects in a new scope
     public static void createNewObjectScope(ScopeTable<Map<String, String>> attrInfo, class_ programClass,
             List<VariableMapping> variableMapping) {

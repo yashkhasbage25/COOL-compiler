@@ -38,11 +38,13 @@ public class InheritanceGraph {
 	private Map<String, Vertex> name2Vertex; // a map from vertex name to vertex
 	public Set<Vertex> vertices; // set of all vertices in the graph
 	public Map<String, String> parentNameMap; // map of name of parent given a vertex
+	private List<String> dfsOrder;
 
 	public String Root; // root of the InheritanceGraph which is "Object"
 
 	// Constructor for InheritanceGraph
 	public InheritanceGraph() {
+		dfsOrder = new ArrayList<>();
 		name2Vertex = new HashMap<String, Vertex>();
 		parentNameMap = new HashMap<String, String>();
 		vertices = new HashSet<Vertex>();
@@ -164,6 +166,18 @@ public class InheritanceGraph {
 			class1 = parentNameMap.get(class1);
 		}
 		return false;
+	}
+
+	public void DfsOrdering(String u) {
+		dfsOrder.add(u);
+		Vertex x = getVertex(u);
+		for (Vertex v : x.children) {
+			DfsOrdering(v.getName());
+		}
+	}
+
+	public List<String> getDfsOrder() {
+		return dfsOrder;
 	}
 
 }

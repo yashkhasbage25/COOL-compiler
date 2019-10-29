@@ -314,7 +314,7 @@ public class Codegen {
 		}
 
 		// plus expression
-		if(expr.getClass() == AST.plus.class) {
+		else if(expr.getClass() == AST.plus.class) {
 			AST.plus plusExpr = (AST.plus) expr;
 			handleClassMethod(IRClass, formalMap, plusExpr.e1, out, false);
 			String reg1 = "%" + registerCounter;
@@ -326,7 +326,7 @@ public class Codegen {
 		}
 
 		// subtraction expression
-		if(expr.getClass() == AST.sub.class) {
+		else if(expr.getClass() == AST.sub.class) {
 			AST.sub subExpr = (AST.sub) expr;
 			handleClassMethod(IRClass, formalMap, subExpr.e1, out, false);
 			String reg1 = "%" + registerCounter;
@@ -338,7 +338,7 @@ public class Codegen {
 		}
 
 		// multiplication expression
-		if(expr.getClass() == AST.mul.class) {
+		else if(expr.getClass() == AST.mul.class) {
 			AST.mul mulExpr = (AST.mul) expr;
 			handleClassMethod(IRClass, formalMap, mulExpr.e1, out, false);
 			String reg1 = "%" + registerCounter;
@@ -350,7 +350,7 @@ public class Codegen {
 		}
 
 		// division expression
-		if(expr.getClass() == AST.divide.class) {
+		else if(expr.getClass() == AST.divide.class) {
 			AST.divide divideExpr = (AST.divide) expr;
 			handleClassMethod(IRClass, formalMap, divideExpr.e1, out, false);
 			String reg1 = "%" + registerCounter;
@@ -362,7 +362,7 @@ public class Codegen {
 		}
 
 		// int expression
-		if(expr.getClass() == AST.int_const.class) {
+		else if(expr.getClass() == AST.int_const.class) {
 			out.println("%" + ++registerCounter + " = alloca i32, align 4");
 			out.println("store i32 " + ((AST.int_const) expr).value + ", i32* %" + registerCounter + ", align 4");
 			out.println("%" + ++registerCounter + " = load i32, i32* %" + (registerCounter-1) + ", align 4");
@@ -371,7 +371,7 @@ public class Codegen {
 		}
 
 		// bool expression
-		if(expr.getClass() == AST.bool_const.class) {
+		else if(expr.getClass() == AST.bool_const.class) {
 			boolean bool = ((AST.bool_const) expr).value;
 			int int4bool = 0;
 			if(bool) int4bool = 1;
@@ -384,7 +384,7 @@ public class Codegen {
 		}
 
 		// new expression
-		if(expr.getClass() == AST.new_.class) {
+		else if(expr.getClass() == AST.new_.class) {
 			AST.new_ newExpr = (AST.new_) expr;
 			out.println("%" + ++registerCounter + " = alloca " + CoolUtils.printTypes2(newExpr.typeid) + ", align 4");
 
@@ -392,7 +392,7 @@ public class Codegen {
 		}
 
 		// identifier expression
-		if(expr.getClass() == AST.object.class)
+		else if(expr.getClass() == AST.object.class)
 		{
 			String reg;
 			AST.object str = (AST.object)expr;
@@ -596,6 +596,8 @@ public class Codegen {
 			if(lastExpr) {
 				out.println("ret "+CoolUtils.printTypes(str.type) + " %" + (registerCounter));
 			}
+		} else {
+			System.out.println("Unreacheblae code.");
 		}
 	}
 }

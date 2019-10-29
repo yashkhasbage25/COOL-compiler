@@ -9,7 +9,6 @@ class B inherits A {
     cc : String;
     dd : Bool;
     ee : Int;
-    ff : D;
     f1(x : Int) : Int {
         0
     };
@@ -29,5 +28,3 @@ class Main {
         0
     };
 };
-
-

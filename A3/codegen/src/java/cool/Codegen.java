@@ -11,7 +11,7 @@ public class Codegen {
 	public Map<String, class_> ClassNameMap;
 	private HashMap<String, IRClass> nameToIrclassMap;
 	public List<String> globalStr = new ArrayList<String>();
-	public int registerCounter = 0;
+	public int registerCounter = -1;
 	public int stringCounter = 0;
 
 	public Codegen(AST.program program, PrintWriter out) {
@@ -22,6 +22,8 @@ public class Codegen {
 		addDefaultClasses();
 		buildGraph(program);
 		buildIRClassMap(out);
+		for(String s:globalStr) out.println(s);
+
 		// runCodeGenerator();
 	}
 
@@ -50,9 +52,16 @@ public class Codegen {
 		Graph.DfsOrdering(root);
 		dfsOrdering = Graph.getDfsOrder();
 		addClassToMap(dfsOrdering);
+		CoolUtils.printDefaultIR(out);
 		PrintStructDeclerations(dfsOrdering, out);
 		PrintMethods(dfsOrdering, out);
 		PrintConstructor(dfsOrdering, out);
+		out.println("define i32 @main() {\n"
+			+ "entry:\n%main = alloca %class.Main, align 8\n"
+			+ "call void @_CN4Main_FN4Main_(%class.Main* %main)\n"
+			+ "%retval = call i32 @_CN4Main_FN4main_(%class.Main* %main)\n"
+			+ "ret i32 %retval\n}");
+
 		// System.out.println(dfsOrdering); works fine
 	}
 
@@ -81,6 +90,7 @@ public class Codegen {
 
 	private void PrintMethods(List<String> dfsOrdering, PrintWriter out) {
 		for (String s : dfsOrdering) {
+
 			System.out.println(s);
 			if (s.equals("Object"))
 				CoolUtils.PrintMethodsObject(out);
@@ -95,20 +105,22 @@ public class Codegen {
 				IRClass currClass = nameToIrclassMap.get(s);
 				for (Map.Entry<String, AST.method> entry : currClass.mlist.entrySet()) {
 					String methodName = entry.getKey();
+					if(methodName.equals("main"))continue;
 					AST.method method = entry.getValue();
 					out.print("define " + CoolUtils.printTypes(method.typeid) + " @"
 							+ CoolUtils.getMangledName(s, methodName) + "(");
 					for (int i = 0; i < method.formals.size(); i++) {
 						out.print(
 								CoolUtils.printTypes(method.formals.get(i).typeid) + " %" + method.formals.get(i).name);
-						if (i != method.formals.size())
+						if (i != method.formals.size()-1)
 							out.print(", ");
 						formalMap.put(method.formals.get(i).name, method.formals.get(i));
 					}
 					formalMap.put("#rettype", new AST.formal("ret", method.typeid, 0));
 					out.println("){");
-					registerCounter = 0;
-					// handleClassMethod(currClass, formalMap, method.body, out, true);
+					out.println("entry:");
+					registerCounter = -1;
+					handleClassMethod(currClass, formalMap, method.body, out, true);
 
 					out.println("}\n");
 
@@ -119,35 +131,53 @@ public class Codegen {
 
 	private void PrintConstructor(List<String> dfsOrdering, PrintWriter out) {
 		for (String s : dfsOrdering) {
-			registerCounter = 0;
+			if(CoolUtils.IsDefaultClass(s) || s.equals("Main"))continue;
+			registerCounter = -1;
 			int attrCounter = 0;
-			String formals = CoolUtils.printTypes(s) + " %this";
+			String formals = CoolUtils.printTypes2(s) + " %this";
 			out.println("define void @" + CoolUtils.getMangledName(s, s) + "(" + formals + " ) {");
 			String parentName = Graph.parentNameMap.get(s);
+			out.println("entry:");
 			if (parentName != null) {
 				out.println(
-						"\t%" + (registerCounter) + " = bitcast %class." + s + "* %this to %class." + parentName + "*");
-				out.println("\tcall void @" + CoolUtils.getMangledName(parentName, parentName) + "(%class." + parentName
-						+ "* %" + registerCounter);
-				registerCounter++;
+						"%" + (++registerCounter) + " = bitcast %class." + s + "* %this to %class." + parentName + "*");
+				out.println("call void @" + CoolUtils.getMangledName(parentName, parentName) + "(%class." + parentName
+						+ "* %" + registerCounter+")");
 
 			}
 			for (AST.attr a : nameToIrclassMap.get(s).alist.values()) {
-				System.out.println(s + " " + a);
+				//out.println(s + " " + a + " " + a.name);
 				if (!(a.value instanceof AST.no_expr)) {
 					AST.assign exp = new AST.assign(a.name, a.value, 0);
 					exp.type = a.typeid;
 					handleClassMethod(nameToIrclassMap.get(s), null, exp, out, false);
+				} else if (a.typeid.equals("Int")) {
+					AST.assign exp = new AST.assign(a.name, new AST.int_const(0, 0), 0);
+					exp.type = "Int";
+					handleClassMethod(nameToIrclassMap.get(s), null, exp, out, false);
+
+				} else if (a.typeid.equals("Bool")) {
+					AST.assign exp = new AST.assign(a.name, new AST.bool_const(false, 0), 0);
+					exp.type = "Bool";
+					handleClassMethod(nameToIrclassMap.get(s), null, exp, out, false);
+
+				} else if (a.typeid.equals("String")) {
+					AST.assign exp = new AST.assign(a.name, new AST.string_const("", 0), 0);
+					exp.type = "String";
+					handleClassMethod(nameToIrclassMap.get(s), null, exp, out, false);
+
 				} else {
 					String ctype = CoolUtils.printTypes(s);
-					out.println("\t%" + (registerCounter) + " = getelementptr inbounds " + ctype + "," + ctype
+					out.println("%" + ++registerCounter + " = getelementptr inbounds " + ctype + "," + ctype
 							+ "* %this, i32 0, i32 " + attrCounter);
-					out.println("\tstore " + CoolUtils.printTypes(a.typeid) + " null, " + CoolUtils.printTypes(a.typeid)
+					// out.println("a =" + a.typeid);
+					// out.println(a);
+					out.println("store " + CoolUtils.printTypes2(a.typeid) + " null, " + CoolUtils.printTypes(a.typeid)
 							+ "* %" + registerCounter + ", align 4");
-					registerCounter++;
+
 				}
 			}
-			out.println("}");
+			out.println("ret void\n}");
 		}
 	}
 
@@ -269,16 +299,17 @@ public class Codegen {
 				out.println("%" + ++registerCounter + " = getelementptr inbounds %class."
 				+ IRClass.name + ", %class." + IRClass.name +
 				"* %this, i32 0, i32 " + IRClass.attrIndex.get(assignExpr.name));
-				reg = "%" + registerCounter;
+				reg = "%" + (registerCounter+1);
+				// out.println("??" + assignExpr.name + " " + IRClass.alist.get(assignExpr.name).typeid);
 				varType = CoolUtils.printTypes(IRClass.alist.get(assignExpr.name).typeid);
 			} else {
 				reg = "%" + assignExpr.name;
 				varType = CoolUtils.printTypes(formalMap.get(assignExpr.name).typeid);
 			}
-
+			// out.println("exp type: " + exp.type);
 			handleClassMethod(IRClass, formalMap, exp, out, false);
 			out.println("store " + varType + " %" + registerCounter + ", " + varType +
-			"* " + reg + ", align 4");
+			"* " + reg + ", align 4"); // check
 			if(lastExpr) out.println("ret " + varType + " %" +registerCounter);
 		}
 
@@ -345,9 +376,9 @@ public class Codegen {
 			int int4bool = 0;
 			if(bool) int4bool = 1;
 
-			out.println("%" + ++registerCounter + " = alloca i32, align 1"); ////////////////////
-			out.println("store i32 " + int4bool + ", i32* %" + registerCounter + ", align 4");
-			out.println("%" + ++registerCounter + " = load i32, i32* %" + (registerCounter-1) + ", align 4");
+			out.println("%" + ++registerCounter + " = alloca i8, align 1"); ////////////////////
+			out.println("store i8 " + int4bool + ", i8* %" + registerCounter + ", align 1");
+			out.println("%" + ++registerCounter + " = load i8, i8* %" + (registerCounter-1) + ", align 1");
 
 			if(lastExpr) out.println("ret int32 %" + registerCounter);
 		}
@@ -448,13 +479,13 @@ public class Codegen {
 			out.println("ifbody"+tag+":");
 			handleClassMethod(IRClass, formalMap, e2, out, false);
 			if(lastExpr)
-				out.println("ret "+CoolUtils.printTypes(e2.type) + " %" + registerCounter++);
+				out.println("ret "+CoolUtils.printTypes(e2.type) + " %" + ++registerCounter);
 			out.println("br label %elsebody"+tag);
 
 			out.println("elsebody"+tag+":");
 			handleClassMethod(IRClass, formalMap, e3, out, false);
 			if(lastExpr)
-				out.println("ret "+CoolUtils.printTypes(e3.type) + " %" + registerCounter++);
+				out.println("ret "+CoolUtils.printTypes(e3.type) + " %" + ++registerCounter);
 
 		    out.println("br label %thenbody"+tag); ///////////////////
 			out.println("thenbody"+tag+":");

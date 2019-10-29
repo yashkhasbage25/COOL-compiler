@@ -25,7 +25,7 @@ class CoolUtils {
         else if (s.equals(BOOL_TYPE_STR))
             return "i8";
         else if (s.equals(STRING_TYPE_STR))
-            return "i8*";
+            return "[1024 x i8]";
         else
             return "%class." + s;
 
@@ -33,14 +33,26 @@ class CoolUtils {
 
     public static String printTypes2(String s) {
         if (s.equals(INT_TYPE_STR))
-            return "i32";
+            return "i32*";
         else if (s.equals(BOOL_TYPE_STR))
-            return "i8";
-        else if (s.equals(STRING_TYPE_STR))
             return "i8*";
+        else if (s.equals(STRING_TYPE_STR))
+            return "[1024 x i8]*";
         else
             return "%class." + s+"*";
+    }
 
+    public static void printDefaultIR(PrintWriter out) {
+	    out.println("target datalayout = \"e-m:e-i64:64-f80:128-n8:16:32:64-S128\"");
+        out.println("target triple = \"x86_64-unknown-linux-gnu\"");
+        out.println("define void @_CN6Object_FN6Object_(%class.Object* %this) {\nentry:\nret void\n}");
+        out.println("define void @_CN2IO_FN2IO_(%class.IO* %this) {\nentry:\n%0 = bitcast %class.IO* %this to %class.Object*\ncall void @_CN6Object_FN6Object_(%class.Object* %0)\nret void\n}");
+        out.println("define void @_CN4Main_FN4Main_(%class.Main* %this) {\n entry:\n %0 = bitcast %class.Main* %this to %class.Object*\n call void @_CN6Object_FN6Object_(%class.Object* %0)\n ret void}");
+        out.println("; C malloc declaration\ndeclare noalias i8* @malloc(i64)\n; C exit declaration\ndeclare void @exit(i32)\n; C printf declaration\ndeclare i32 @printf(i8*, ...)\n; C scanf declaration\ndeclare i32 @scanf(i8*, ...)\n; C strlen declaration\ndeclare i64 @strlen(i8*)\n; C strcpy declaration\ndeclare i8* @strcpy(i8*, i8*)\n; C strcat declaration\ndeclare i8* @strcat(i8*, i8*)\n; C strncpy declaration\ndeclare i8* @strncpy(i8*, i8*, i32)\n");
+        out.println("@strformatstr = private unnamed_addr constant [3 x i8] c\"%s\\00\", align 1\n"
+			+ "@intformatstr = private unnamed_addr constant [3 x i8] c\"%d\\00\", align 1\n");
+        out.println("define i32 @_CN4Main_FN4main_(%class.Main* %this) {"
+            + "entry:\nret i32 0\n}");
     }
 
     public static void PrintMethodsObject(PrintWriter out) {

@@ -10,6 +10,9 @@ public class Codegen {
 	public InheritanceGraph Graph;
 	public Map<String, class_> ClassNameMap;
 	private HashMap<String, IRClass> nameToIrclassMap;
+	public List<String> globalStr = new ArrayList<String>();
+	public int registerCounter = 0;
+	public int stringCounter = 0;
 
 	public Codegen(AST.program program, PrintWriter out) {
 
@@ -70,12 +73,87 @@ public class Codegen {
 		}
 	}
 
-	private void PrintMethods(List<String> dfsOrdering, PrintWriter out) {
+	private void defineStringConst(AST.expression expr, PrintWriter out) {
+		AST.string_const str_obj = (AST.string_const) expr;
+		globalStr.add("@.str." + stringCounter++ + " = private unnamed_addr constant [" + (str_obj.value.length() + 1)
+				+ " x i8] c\"" + str_obj.value + "\\00\", align 1");
+	}
 
+	private void PrintMethods(List<String> dfsOrdering, PrintWriter out) {
+		for (String s : dfsOrdering) {
+			if (s.equals("Object"))
+				CoolUtils.PrintMethodsObject(out);
+			else if (s.equals("IO"))
+				CoolUtils.PrintMethodsIO(out);
+			else if (s.equals("String"))
+				CoolUtils.PrintMethodsString(out);
+			else if (s.equals("Int") || s.equals("Bool"))
+				return;
+			else {
+				HashMap<String, AST.formal> fmap = new HashMap<String, AST.formal>();
+				IRClass currClass = nameToIrclassMap.get(s);
+				for (Map.Entry<String, AST.method> entry : currClass.mlist.entrySet()) {
+					String methodName = entry.getKey();
+					AST.method method = entry.getValue();
+					out.print("define " + CoolUtils.printTypes(method.typeid) + " @"
+							+ CoolUtils.getMangledName(s, methodName) + "(");
+					for (int i = 0; i < method.formals.size(); i++) {
+						out.print(
+								CoolUtils.printTypes(method.formals.get(i).typeid) + " %" + method.formals.get(i).name);
+						if (i != method.formals.size())
+							out.print(", ");
+						fmap.put(method.formals.get(i).name, method.formals.get(i));
+					}
+					fmap.put("#rettype", new AST.formal("ret", method.typeid, 0));
+					out.println("){");
+					registerCounter = 0;
+					// ProcessMethod(currClass, fmap, method.body, out, true);
+
+					out.println("}\n");
+
+				}
+			}
+		}
 	}
 
 	private void PrintConstructor(List<String> dfsOrdering, PrintWriter out) {
+		for (String s : dfsOrdering) {
+			registerCounter = 0;
+			int attrCounter = 0;
+			String formals = CoolUtils.printTypes(s) + " %this";
+			out.println("define void @" + CoolUtils.getMangledName(s, s) + "(" + formals + " ) {");
+			for (AST.attr a : nameToIrclassMap.get(s).alist.values()) {
+				System.out.println(s + " " + a);
+				if (!(a.value instanceof AST.no_expr)) {
+					AST.assign exp = new AST.assign(a.name, a.value, 0);
+					exp.type = a.typeid;
+					// ProcessMethod(nameToIrclassMap.get(s), null, exp, out, false);
+				} else if (a.typeid.equals("Int")) {
+					AST.assign exp = new AST.assign(a.name, new AST.int_const(0, 0), 0);
+					exp.type = "Int";
+					// ProcessMethod(nameToIrclassMap.get(s), null, exp, out, false);
 
+				} else if (a.typeid.equals("Bool")) {
+					AST.assign exp = new AST.assign(a.name, new AST.bool_const(false, 0), 0);
+					exp.type = "Bool";
+					// ProcessMethod(nameToIrclassMap.get(s), null, exp, out, false);
+
+				} else if (a.typeid.equals("String")) {
+					AST.assign exp = new AST.assign(a.name, new AST.string_const("", 0), 0);
+					exp.type = "String";
+					// ProcessMethod(nameToIrclassMap.get(s), null, exp, out, false);
+
+				} else {
+					String ctype = CoolUtils.printTypes(s);
+					out.println("\t%" + (registerCounter) + " = getelementptr inbounds " + ctype + "," + ctype
+							+ "* %this, i32 0, i32 " + attrCounter);
+					out.println("\tstore " + CoolUtils.printTypes(a.typeid) + " null, " + CoolUtils.printTypes(a.typeid)
+							+ "* %" + registerCounter + ", align 4");
+					registerCounter++;
+				}
+			}
+			out.println("}");
+		}
 	}
 
 	private void addDefaultClasses() {
@@ -105,7 +183,6 @@ public class Codegen {
 	public void addIOClass() {
 		// IO class methods
 		HashMap<String, AST.method> ioMethods = new HashMap<String, AST.method>();
-		ioMethods = nameToIrclassMap.get("Object").mlist;
 		// formals of class methods
 		List<AST.formal> outStringFormals = new ArrayList<AST.formal>();
 		List<AST.formal> outIntFormals = new ArrayList<AST.formal>();
@@ -124,8 +201,8 @@ public class Codegen {
 
 	public void addIntClass() {
 		HashMap<String, AST.method> intMethods = new HashMap<String, AST.method>();
-		intMethods = nameToIrclassMap.get("Object").mlist;
-		IRClass irIntClass = new IRClass("Int", "Object", new HashMap<String, AST.attr>(), intMethods);
+		IRClass irIntClass = new IRClass("Int", "Object", new HashMap<String, AST.attr>(),
+				new HashMap<String, AST.method>());
 		nameToIrclassMap.put("Int", irIntClass);
 	}
 
@@ -133,14 +210,14 @@ public class Codegen {
 		// the only attribute of bool class
 		HashMap<String, AST.method> boolMethods = new HashMap<String, AST.method>();
 		boolMethods = nameToIrclassMap.get("Object").mlist;
-		IRClass irBoolClass = new IRClass("Int", "Object", new HashMap<String, AST.attr>(), boolMethods);
+		IRClass irBoolClass = new IRClass("Bool", "Object", new HashMap<String, AST.attr>(),
+				new HashMap<String, AST.method>());
 		nameToIrclassMap.put("Bool", irBoolClass);
 	}
 
 	public void addStringClass() {
 		// string class methods and their formals
 		HashMap<String, AST.method> stringMethods = new HashMap<String, AST.method>();
-		stringMethods = nameToIrclassMap.get("Object").mlist;
 		List<AST.formal> concatFormals = new ArrayList<AST.formal>();
 		concatFormals.add(new AST.formal("arg", "String", 0));
 		List<AST.formal> substrFormals = new ArrayList<AST.formal>();
@@ -160,9 +237,13 @@ public class Codegen {
 				continue;
 
 			AST.class_ currAstClass = ClassNameMap.get(s);
+			// System.out.println(s + Graph.parentNameMap.get(s));
 			IRClass parentClass = nameToIrclassMap.get(Graph.parentNameMap.get(s));
-			HashMap<String, AST.attr> curr_alist = parentClass.alist;
-			HashMap<String, AST.method> curr_mlist = parentClass.mlist;
+			// HashMap<String, AST.attr> curr_alist = parentClass.alist;
+			HashMap<String, AST.attr> curr_alist = new HashMap<String, AST.attr>();
+			HashMap<String, AST.method> curr_mlist = new HashMap<String, AST.method>();
+			curr_alist.putAll(parentClass.alist);
+			// curr_mlist.putAll(parentClass.mlist); not needed
 
 			for (AST.feature feature : currAstClass.features) {
 				if (feature.getClass() == AST.attr.class) {

@@ -22,7 +22,8 @@ public class Codegen {
 		addDefaultClasses();
 		buildGraph(program);
 		buildIRClassMap(out);
-		for(String s:globalStr) out.println(s);
+		for (String s : globalStr)
+			out.println(s);
 
 		// runCodeGenerator();
 	}
@@ -56,11 +57,9 @@ public class Codegen {
 		PrintStructDeclerations(dfsOrdering, out);
 		PrintMethods(dfsOrdering, out);
 		PrintConstructor(dfsOrdering, out);
-		out.println("define i32 @main() {\n"
-			+ "entry:\n%main = alloca %class.Main, align 8\n"
-			+ "call void @_CN4Main_FN4Main_(%class.Main* %main)\n"
-			+ "%retval = call i32 @_CN4Main_FN4main_(%class.Main* %main)\n"
-			+ "ret i32 %retval\n}");
+		out.println("define i32 @main() {\n" + "entry:\n%main = alloca %class.Main, align 8\n"
+				+ "call void @_CN4Main_FN4Main_(%class.Main* %main)\n"
+				+ "%retval = call i32 @_CN4Main_FN4main_(%class.Main* %main)\n" + "ret i32 %retval\n}");
 
 		// System.out.println(dfsOrdering); works fine
 	}
@@ -105,15 +104,13 @@ public class Codegen {
 				IRClass currClass = nameToIrclassMap.get(s);
 				for (Map.Entry<String, AST.method> entry : currClass.mlist.entrySet()) {
 					String methodName = entry.getKey();
-					if(methodName.equals("main"))continue;
 					AST.method method = entry.getValue();
 					out.print("define " + CoolUtils.printTypes(method.typeid) + " @"
-							+ CoolUtils.getMangledName(s, methodName) + "(");
+							+ CoolUtils.getMangledName(s, methodName) + "(%class." + s + "* %this ");
+
 					for (int i = 0; i < method.formals.size(); i++) {
-						out.print(
-								CoolUtils.printTypes(method.formals.get(i).typeid) + " %" + method.formals.get(i).name);
-						if (i != method.formals.size()-1)
-							out.print(", ");
+						out.print("," + CoolUtils.printTypes(method.formals.get(i).typeid) + " %"
+								+ method.formals.get(i).name);
 						formalMap.put(method.formals.get(i).name, method.formals.get(i));
 					}
 					formalMap.put("#rettype", new AST.formal("ret", method.typeid, 0));
@@ -131,7 +128,8 @@ public class Codegen {
 
 	private void PrintConstructor(List<String> dfsOrdering, PrintWriter out) {
 		for (String s : dfsOrdering) {
-			if(CoolUtils.IsDefaultClass(s) || s.equals("Main"))continue;
+			if (CoolUtils.IsDefaultClass(s))
+				continue;
 			registerCounter = -1;
 			int attrCounter = 0;
 			String formals = CoolUtils.printTypes2(s) + " %this";
@@ -142,11 +140,11 @@ public class Codegen {
 				out.println(
 						"%" + (++registerCounter) + " = bitcast %class." + s + "* %this to %class." + parentName + "*");
 				out.println("call void @" + CoolUtils.getMangledName(parentName, parentName) + "(%class." + parentName
-						+ "* %" + registerCounter+")");
+						+ "* %" + registerCounter + ")");
 
 			}
 			for (AST.attr a : nameToIrclassMap.get(s).alist.values()) {
-				//out.println(s + " " + a + " " + a.name);
+				// out.println(s + " " + a + " " + a.name);
 				if (!(a.value instanceof AST.no_expr)) {
 					AST.assign exp = new AST.assign(a.name, a.value, 0);
 					exp.type = a.typeid;
@@ -289,18 +287,19 @@ public class Codegen {
 		}
 	}
 
-	private void handleClassMethod(IRClass IRClass, HashMap<String, AST.formal> formalMap, AST.expression expr, PrintWriter out, boolean lastExpr) {
+	private void handleClassMethod(IRClass IRClass, HashMap<String, AST.formal> formalMap, AST.expression expr,
+			PrintWriter out, boolean lastExpr) {
 		// assignment expression
-		if(expr.getClass() == AST.assign.class) {
+		if (expr.getClass() == AST.assign.class) {
 			String reg, varType;
 			AST.assign assignExpr = (AST.assign) expr;
 			AST.expression exp = assignExpr.e1;
-			if(IRClass.alist.containsKey(assignExpr.name)) {
-				out.println("%" + ++registerCounter + " = getelementptr inbounds %class."
-				+ IRClass.name + ", %class." + IRClass.name +
-				"* %this, i32 0, i32 " + IRClass.attrIndex.get(assignExpr.name));
-				reg = "%" + (registerCounter+1);
-				// out.println("??" + assignExpr.name + " " + IRClass.alist.get(assignExpr.name).typeid);
+			if (IRClass.alist.containsKey(assignExpr.name)) {
+				out.println("%" + ++registerCounter + " = getelementptr inbounds %class." + IRClass.name + ", %class."
+						+ IRClass.name + "* %this, i32 0, i32 " + IRClass.attrIndex.get(assignExpr.name));
+				reg = "%" + (registerCounter + 1);
+				// out.println("??" + assignExpr.name + " " +
+				// IRClass.alist.get(assignExpr.name).typeid);
 				varType = CoolUtils.printTypes(IRClass.alist.get(assignExpr.name).typeid);
 			} else {
 				reg = "%" + assignExpr.name;
@@ -308,13 +307,13 @@ public class Codegen {
 			}
 			// out.println("exp type: " + exp.type);
 			handleClassMethod(IRClass, formalMap, exp, out, false);
-			out.println("store " + varType + " %" + registerCounter + ", " + varType +
-			"* " + reg + ", align 4"); // check
-			if(lastExpr) out.println("ret " + varType + " %" +registerCounter);
+			out.println("store " + varType + " %" + registerCounter + ", " + varType + "* " + reg + ", align 4"); // check
+			if (lastExpr)
+				out.println("ret " + varType + " %" + registerCounter);
 		}
 
 		// plus expression
-		else if(expr.getClass() == AST.plus.class) {
+		else if (expr.getClass() == AST.plus.class) {
 			AST.plus plusExpr = (AST.plus) expr;
 			handleClassMethod(IRClass, formalMap, plusExpr.e1, out, false);
 			String reg1 = "%" + registerCounter;
@@ -322,11 +321,12 @@ public class Codegen {
 			String reg2 = "%" + registerCounter;
 			out.println("%" + ++registerCounter + " = add nsw i32 " + reg1 + ", " + reg2);
 
-			if(lastExpr) out.println("ret " + CoolUtils.printTypes(plusExpr.e1.type) + " %" + registerCounter);
+			if (lastExpr)
+				out.println("ret " + CoolUtils.printTypes(plusExpr.e1.type) + " %" + registerCounter);
 		}
 
 		// subtraction expression
-		else if(expr.getClass() == AST.sub.class) {
+		else if (expr.getClass() == AST.sub.class) {
 			AST.sub subExpr = (AST.sub) expr;
 			handleClassMethod(IRClass, formalMap, subExpr.e1, out, false);
 			String reg1 = "%" + registerCounter;
@@ -334,11 +334,12 @@ public class Codegen {
 			String reg2 = "%" + registerCounter;
 			out.println("%" + ++registerCounter + " = sub nsw i32 " + reg1 + ", " + reg2);
 
-			if(lastExpr) out.println("ret " + CoolUtils.printTypes(subExpr.e1.type) + " %" + registerCounter);
+			if (lastExpr)
+				out.println("ret " + CoolUtils.printTypes(subExpr.e1.type) + " %" + registerCounter);
 		}
 
 		// multiplication expression
-		else if(expr.getClass() == AST.mul.class) {
+		else if (expr.getClass() == AST.mul.class) {
 			AST.mul mulExpr = (AST.mul) expr;
 			handleClassMethod(IRClass, formalMap, mulExpr.e1, out, false);
 			String reg1 = "%" + registerCounter;
@@ -346,11 +347,12 @@ public class Codegen {
 			String reg2 = "%" + registerCounter;
 			out.println("%" + ++registerCounter + " = mul nse i32 " + reg1 + ", " + reg2);
 
-			if (lastExpr) out.println("ret " + CoolUtils.printTypes(mulExpr.e1.type) + " %" + registerCounter);
+			if (lastExpr)
+				out.println("ret " + CoolUtils.printTypes(mulExpr.e1.type) + " %" + registerCounter);
 		}
 
 		// division expression
-		else if(expr.getClass() == AST.divide.class) {
+		else if (expr.getClass() == AST.divide.class) {
 			AST.divide divideExpr = (AST.divide) expr;
 			handleClassMethod(IRClass, formalMap, divideExpr.e1, out, false);
 			String reg1 = "%" + registerCounter;
@@ -358,63 +360,74 @@ public class Codegen {
 			String reg2 = "%" + registerCounter;
 			out.println("%" + ++registerCounter + " = sdic i32 " + reg1 + ", " + reg2);
 
-			if (lastExpr) out.println("ret " + CoolUtils.printTypes(divideExpr.e1.type) + " %" +registerCounter);
+			if (lastExpr)
+				out.println("ret " + CoolUtils.printTypes(divideExpr.e1.type) + " %" + registerCounter);
 		}
 
 		// int expression
-		else if(expr.getClass() == AST.int_const.class) {
+		else if (expr.getClass() == AST.int_const.class) {
 			out.println("%" + ++registerCounter + " = alloca i32, align 4");
 			out.println("store i32 " + ((AST.int_const) expr).value + ", i32* %" + registerCounter + ", align 4");
-			out.println("%" + ++registerCounter + " = load i32, i32* %" + (registerCounter-1) + ", align 4");
+			out.println("%" + ++registerCounter + " = load i32, i32* %" + (registerCounter - 1) + ", align 4");
 
-			if (lastExpr) out.println("ret i32 %" + registerCounter);
+			if (lastExpr)
+				out.println("ret i32 %" + registerCounter);
 		}
 
 		// bool expression
-		else if(expr.getClass() == AST.bool_const.class) {
+		else if (expr.getClass() == AST.bool_const.class) {
 			boolean bool = ((AST.bool_const) expr).value;
 			int int4bool = 0;
-			if(bool) int4bool = 1;
+			if (bool)
+				int4bool = 1;
 
 			out.println("%" + ++registerCounter + " = alloca i8, align 1"); ////////////////////
 			out.println("store i8 " + int4bool + ", i8* %" + registerCounter + ", align 1");
-			out.println("%" + ++registerCounter + " = load i8, i8* %" + (registerCounter-1) + ", align 1");
+			out.println("%" + ++registerCounter + " = load i8, i8* %" + (registerCounter - 1) + ", align 1");
 
-			if(lastExpr) out.println("ret int32 %" + registerCounter);
+			if (lastExpr)
+				out.println("ret int32 %" + registerCounter);
 		}
 
 		// new expression
-		else if(expr.getClass() == AST.new_.class) {
+		else if (expr.getClass() == AST.new_.class) {
 			AST.new_ newExpr = (AST.new_) expr;
 			out.println("%" + ++registerCounter + " = alloca " + CoolUtils.printTypes2(newExpr.typeid) + ", align 4");
 
-			if(lastExpr) out.println("ret " + CoolUtils.printTypes2(newExpr.typeid) + "* %" + registerCounter);
+			if (lastExpr)
+				out.println("ret " + CoolUtils.printTypes2(newExpr.typeid) + "* %" + registerCounter);
 		}
 
 		// identifier expression
-		else if(expr.getClass() == AST.object.class)
-		{
+		else if (expr.getClass() == AST.object.class) {
 			String reg;
-			AST.object str = (AST.object)expr;
+			AST.object str = (AST.object) expr;
 			if (str.name.equals("self")) {
-				out.println("%"+ ++registerCounter +" = alloca " + CoolUtils.printTypes(str.type) + ", align 4");
-				out.println("store "+CoolUtils.printTypes(str.type)+" %this, "+CoolUtils.printTypes(str.type)+"* %"+registerCounter+", align 4");
-				out.println("%"+ ++registerCounter + " = load "+CoolUtils.printTypes(str.type)+", "+CoolUtils.printTypes(str.type)+"* %"+ (registerCounter-1) + ", align 4");
+				out.println("%" + ++registerCounter + " = alloca " + CoolUtils.printTypes(str.type) + ", align 4");
+				out.println("store " + CoolUtils.printTypes(str.type) + " %this, " + CoolUtils.printTypes(str.type)
+						+ "* %" + registerCounter + ", align 4");
+				out.println("%" + ++registerCounter + " = load " + CoolUtils.printTypes(str.type) + ", "
+						+ CoolUtils.printTypes(str.type) + "* %" + (registerCounter - 1) + ", align 4");
 			}
 
-			else if(formalMap.containsKey(str.name)) {
-				out.println("%"+ ++registerCounter +" = alloca " + CoolUtils.printTypes(str.type) + ", align 4");
-				out.println("store "+CoolUtils.printTypes(str.type)+" %"+str.name+", "+CoolUtils.printTypes(str.type)+"* %"+registerCounter+", align 4");
-				out.println("%"+ ++registerCounter + " = load "+CoolUtils.printTypes(str.type)+", "+CoolUtils.printTypes(str.type)+"* %"+ (registerCounter-1) + ", align 4");
-			}
-			else { // it must be defined in attributes.
-				out.println("%"+ ++registerCounter +" = getelementptr inbounds %class." + IRClass.name + ", %class."+IRClass.name+"* %this, i32 0, i32 "+IRClass.attrIndex.get(str.name));
-				out.println("%"+ ++registerCounter +" = load  " + CoolUtils.printTypes(IRClass.alist.get(str.name).typeid) + ", "+ CoolUtils.printTypes(IRClass.alist.get(str.name).typeid) + "* %"+(registerCounter-1)+", align 4");
+			else if (formalMap.containsKey(str.name)) {
+				out.println("%" + ++registerCounter + " = alloca " + CoolUtils.printTypes(str.type) + ", align 4");
+				out.println("store " + CoolUtils.printTypes(str.type) + " %" + str.name + ", "
+						+ CoolUtils.printTypes(str.type) + "* %" + registerCounter + ", align 4");
+				out.println("%" + ++registerCounter + " = load " + CoolUtils.printTypes(str.type) + ", "
+						+ CoolUtils.printTypes(str.type) + "* %" + (registerCounter - 1) + ", align 4");
+			} else { // it must be defined in attributes.
+				out.println("%" + ++registerCounter + " = getelementptr inbounds %class." + IRClass.name + ", %class."
+						+ IRClass.name + "* %this, i32 0, i32 " + IRClass.attrIndex.get(str.name));
+				out.println(
+						"%" + ++registerCounter + " = load  " + CoolUtils.printTypes(IRClass.alist.get(str.name).typeid)
+								+ ", " + CoolUtils.printTypes(IRClass.alist.get(str.name).typeid) + "* %"
+								+ (registerCounter - 1) + ", align 4");
 
 			}
 
-			if(lastExpr)
-				out.println("ret "+CoolUtils.printTypes(str.type) + " %" + registerCounter);
+			if (lastExpr)
+				out.println("ret " + CoolUtils.printTypes(str.type) + " %" + registerCounter);
 		}
 
 		// dispatch
@@ -432,135 +445,135 @@ public class Codegen {
 		}
 
 		// if then else
-		else if(expr.getClass() == AST.cond.class)
-		{
-			AST.cond str = (AST.cond)expr;
+		else if (expr.getClass() == AST.cond.class) {
+			AST.cond str = (AST.cond) expr;
 			AST.expression e1 = str.predicate;
 			AST.expression e2 = str.ifbody;
 			AST.expression e3 = str.elsebody;
 			handleClassMethod(IRClass, formalMap, e1, out, false);
-			String tag = ""+registerCounter;
-			out.println("br i1 %"+registerCounter+", label %ifbody"+tag+", label %elsebody"+tag);
+			String tag = "" + registerCounter;
+			out.println("br i1 %" + registerCounter + ", label %ifbody" + tag + ", label %elsebody" + tag);
 
-			out.println("ifbody"+tag+":");
+			out.println("ifbody" + tag + ":");
 			handleClassMethod(IRClass, formalMap, e2, out, false);
-			if(lastExpr)
-				out.println("ret "+CoolUtils.printTypes(e2.type) + " %" + ++registerCounter);
-			out.println("br label %elsebody"+tag);
+			if (lastExpr)
+				out.println("ret " + CoolUtils.printTypes(e2.type) + " %" + ++registerCounter);
+			out.println("br label %elsebody" + tag);
 
-			out.println("elsebody"+tag+":");
+			out.println("elsebody" + tag + ":");
 			handleClassMethod(IRClass, formalMap, e3, out, false);
-			if(lastExpr)
-				out.println("ret "+CoolUtils.printTypes(e3.type) + " %" + ++registerCounter);
+			if (lastExpr)
+				out.println("ret " + CoolUtils.printTypes(e3.type) + " %" + ++registerCounter);
 
-		    out.println("br label %thenbody"+tag); ///////////////////
-			out.println("thenbody"+tag+":");
+			out.println("br label %thenbody" + tag); ///////////////////
+			out.println("thenbody" + tag + ":");
 
-			if(lastExpr)
-			out.println("ret "+CoolUtils.printTypes(formalMap.get("#rettype").typeid) + " %"+(registerCounter-1));
+			if (lastExpr)
+				out.println(
+						"ret " + CoolUtils.printTypes(formalMap.get("#rettype").typeid) + " %" + (registerCounter - 1));
 
 		}
 
-		else if(expr.getClass() == AST.block.class) /////////////
+		else if (expr.getClass() == AST.block.class) /////////////
 		{
-			AST.block str = (AST.block)expr;
+			AST.block str = (AST.block) expr;
 			List<AST.expression> listExp = new ArrayList<AST.expression>();
 			listExp = str.l1;
 			boolean isMethod = false;
 			if (lastExpr == true)
 				isMethod = true;
 			lastExpr = false;
-			for(int i = 0; i < listExp.size(); ++i)
-	        {
-	        	AST.expression e2 = new AST.expression();
+			for (int i = 0; i < listExp.size(); ++i) {
+				AST.expression e2 = new AST.expression();
 				e2 = listExp.get(i);
-				if (i == listExp.size()-1 && isMethod)
+				if (i == listExp.size() - 1 && isMethod)
 					lastExpr = true;
 
 				handleClassMethod(IRClass, formalMap, e2, out, lastExpr);
 
-	        }
+			}
 
 		}
 
-
 		// while loop
-		else if(expr.getClass() == AST.loop.class)
-		{
-			AST.loop str = (AST.loop)expr;
+		else if (expr.getClass() == AST.loop.class) {
+			AST.loop str = (AST.loop) expr;
 			AST.expression e1 = str.predicate;
 			AST.expression e2 = str.body;
 
-			String tag = ""+registerCounter;
-			out.println("br label %"+"predicate"+tag);
-			out.println("predicate"+tag+":");
+			String tag = "" + registerCounter;
+			out.println("br label %" + "predicate" + tag);
+			out.println("predicate" + tag + ":");
 			handleClassMethod(IRClass, formalMap, e1, out, false);
-			out.println("br i1 %"+registerCounter+", label %loopbody"+tag+", label %pool"+tag);
+			out.println("br i1 %" + registerCounter + ", label %loopbody" + tag + ", label %pool" + tag);
 
-			out.println("loopbody"+tag+":");
+			out.println("loopbody" + tag + ":");
 			handleClassMethod(IRClass, formalMap, e2, out, false);
-			out.println("br label %predicate"+tag);
+			out.println("br label %predicate" + tag);
 
-			out.println("pool"+tag+":");
+			out.println("pool" + tag + ":");
 
-			if(lastExpr)
-				out.println("ret "+CoolUtils.printTypes(formalMap.get("#rettype").typeid) + " %" + registerCounter);
+			if (lastExpr)
+				out.println("ret " + CoolUtils.printTypes(formalMap.get("#rettype").typeid) + " %" + registerCounter);
 
 		}
 
-		else if(expr.getClass() == AST.eq.class)
-		{
-			AST.eq str = (AST.eq)expr;
+		else if (expr.getClass() == AST.eq.class) {
+			AST.eq str = (AST.eq) expr;
 			handleClassMethod(IRClass, formalMap, str.e1, out, false);
-			String reg1 = "%"+registerCounter;
+			String reg1 = "%" + registerCounter;
 			handleClassMethod(IRClass, formalMap, str.e2, out, false);
-			String reg2 = "%"+registerCounter;
-			out.println("%"+ ++registerCounter +" = icmp eq " + CoolUtils.printTypes(str.e1.type) + " "+reg1+", "+reg2);
+			String reg2 = "%" + registerCounter;
+			out.println("%" + ++registerCounter + " = icmp eq " + CoolUtils.printTypes(str.e1.type) + " " + reg1 + ", "
+					+ reg2);
 		}
 
 		// less than
-		else if(expr.getClass() == AST.lt.class)
-		{
-			AST.lt str = (AST.lt)expr;
+		else if (expr.getClass() == AST.lt.class) {
+			AST.lt str = (AST.lt) expr;
 			handleClassMethod(IRClass, formalMap, str.e1, out, false);
-			String reg1 = "%"+registerCounter;
+			String reg1 = "%" + registerCounter;
 			handleClassMethod(IRClass, formalMap, str.e2, out, false);
-			String reg2 = "%"+registerCounter;
-			out.println("%"+ ++registerCounter +" = icmp slt " + CoolUtils.printTypes(str.e1.type) + " "+reg1+", "+reg2);
+			String reg2 = "%" + registerCounter;
+			out.println("%" + ++registerCounter + " = icmp slt " + CoolUtils.printTypes(str.e1.type) + " " + reg1 + ", "
+					+ reg2);
 		}
 
 		// less than equal to
-		else if(expr.getClass() == AST.leq.class)
-		{
-			AST.leq str = (AST.leq)expr;
+		else if (expr.getClass() == AST.leq.class) {
+			AST.leq str = (AST.leq) expr;
 			handleClassMethod(IRClass, formalMap, str.e1, out, false);
-			String reg1 = "%"+registerCounter;
+			String reg1 = "%" + registerCounter;
 			handleClassMethod(IRClass, formalMap, str.e2, out, false);
-			String reg2 = "%"+registerCounter;
-			out.println("%"+ ++registerCounter +" = icmp sle " + CoolUtils.printTypes(str.e1.type) + " "+reg1+", "+reg2);
+			String reg2 = "%" + registerCounter;
+			out.println("%" + ++registerCounter + " = icmp sle " + CoolUtils.printTypes(str.e1.type) + " " + reg1 + ", "
+					+ reg2);
 		}
 
 		// negation (not EXPR)
-		else if(expr.getClass() == AST.neg.class)
-		{
-			AST.neg str = (AST.neg)expr;
+		else if (expr.getClass() == AST.neg.class) {
+			AST.neg str = (AST.neg) expr;
 			handleClassMethod(IRClass, formalMap, str.e1, out, false);
-			String reg1 = "%"+registerCounter;
-			out.println("%"+ ++registerCounter +" = icmp ne " + CoolUtils.printTypes(str.e1.type) + " "+reg1+", "+reg1);
+			String reg1 = "%" + registerCounter;
+			out.println("%" + ++registerCounter + " = icmp ne " + CoolUtils.printTypes(str.e1.type) + " " + reg1 + ", "
+					+ reg1);
 		}
 
 		// string const
-		else if(expr.getClass() == AST.string_const.class)
-		{
-			AST.string_const str = (AST.string_const)expr;
-			defineStringConst(str,out);
-			out.println("%"+ ++registerCounter +" = alloca [1024 x i8], align 16");
-			out.println("%"+ ++registerCounter +" = getelementptr inbounds [1024 x i8], [1024 x i8]* %"+(registerCounter-1)+", i32 0, i32 0");
-			out.println("%"+ ++registerCounter +" = call i8* @strcpy(i8* %"+ (registerCounter-1) + ", i8* getelementptr inbounds (["+ (str.value.length()+1) +" x i8], ["+ (str.value.length()+1) +" x i8]* @.str."+ (stringCounter-1) +", i32 0, i32 0))");
-			out.println("%"+ ++registerCounter +" = load [1024 x i8], [1024 x i8]* %"+(registerCounter-3) + ", align 16");
+		else if (expr.getClass() == AST.string_const.class) {
+			AST.string_const str = (AST.string_const) expr;
+			defineStringConst(str, out);
+			out.println("%" + ++registerCounter + " = alloca [1024 x i8], align 16");
+			out.println("%" + ++registerCounter + " = getelementptr inbounds [1024 x i8], [1024 x i8]* %"
+					+ (registerCounter - 1) + ", i32 0, i32 0");
+			out.println("%" + ++registerCounter + " = call i8* @strcpy(i8* %" + (registerCounter - 1)
+					+ ", i8* getelementptr inbounds ([" + (str.value.length() + 1) + " x i8], ["
+					+ (str.value.length() + 1) + " x i8]* @.str." + (stringCounter - 1) + ", i32 0, i32 0))");
+			out.println("%" + ++registerCounter + " = load [1024 x i8], [1024 x i8]* %" + (registerCounter - 3)
+					+ ", align 16");
 
-			if(lastExpr) {
-				out.println("ret "+CoolUtils.printTypes(str.type) + " %" + (registerCounter));
+			if (lastExpr) {
+				out.println("ret " + CoolUtils.printTypes(str.type) + " %" + (registerCounter));
 			}
 		} else {
 			System.out.println("Unreacheblae code.");

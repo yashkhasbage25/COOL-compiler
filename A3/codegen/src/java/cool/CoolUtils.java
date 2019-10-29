@@ -31,15 +31,28 @@ class CoolUtils {
 
     }
 
+    public static String printTypes2(String s) {
+        if (s.equals(INT_TYPE_STR))
+            return "i32";
+        else if (s.equals(BOOL_TYPE_STR))
+            return "i8";
+        else if (s.equals(STRING_TYPE_STR))
+            return "i8*";
+        else
+            return "%class." + s+"*";
+
+    }
+
     public static void PrintMethodsObject(PrintWriter out) {
         out.println("define %class.Object* @_CN6Object_FN5abort_( %class.Object* %this ) noreturn {\n" + "entry:\n"
                 + "\tcall void @exit( i32 1 )\n" + "\tret %class.Object* null\n" + "}\n");
 
-        out.println("define [1024 x i8]* @_CN6Object_FN9type_name_( %class.Object* %this ) {\n" + "entry:\n"
-                + "\t%0 = getelementptr inbounds %class.Object, %class.Object* %this, i32 0, i32 1\n"
-                + "\t%1 = load [1024 x i8]*, [1024 x i8]** %0\n"
-                + "\t%retval = call [1024 x i8]* @_CN6String_FN4copy_( [1024 x i8]* %1 )\n"
-                + "\tret [1024 x i8]* %retval\n" + "}\n");
+        out.println("define i8* @CN6Object_FN9type_name(%class.Object* %this) {\n"
+                + "\tentry:"
+                + "\t%0 = getelementptr inbounds %class.Object, %class.Object* %this, i32 0, i32 0"
+                + "\t%1 = load i8*, i8** %0, align 8"
+                + "\tret i8* %1"
+                + "}");
     }
 
     public static void PrintMethodsIO(PrintWriter out) {

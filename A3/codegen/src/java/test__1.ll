@@ -14,14 +14,8 @@ entry:
 	ret %class.Object* null
 }
 
-define [1024 x i8]* @_CN6Object_FN9type_name_( %class.Object* %this ) {
-entry:
-	%0 = getelementptr inbounds %class.Object, %class.Object* %this, i32 0, i32 1
-	%1 = load [1024 x i8]*, [1024 x i8]** %0
-	%retval = call [1024 x i8]* @_CN6String_FN4copy_( [1024 x i8]* %1 )
-	ret [1024 x i8]* %retval
-}
-
+define i8* @CN6Object_FN9type_name(%class.Object* %this) {
+	entry:	%0 = getelementptr inbounds %class.Object, %class.Object* %this, i32 0, i32 0	%1 = load i8*, i8** %0, align 8	ret i8* %1}
 define i32 @_CN6String_FN6length_( [1024 x i8]* %this ) {
 	entry:
 	%0 = bitcast [1024 x i8]* %this to i8*
@@ -120,22 +114,52 @@ define void @_CN2IO_FN2IO_(%class.IO %this ) {
 define void @_CN1D_FN1D_(%class.D %this ) {
 	%0 = bitcast %class.D* %this to %class.Object*
 	call void @_CN6Object_FN6Object_(%class.Object* %0
+	%1 = getelementptr inbounds %class.D,%class.D* %this, i32 0, i32 0
+	store i32 null, i32* %1, align 4
 }
 define void @_CN1A_FN1A_(%class.A %this ) {
 	%0 = bitcast %class.A* %this to %class.D*
 	call void @_CN1D_FN1D_(%class.D* %0
+	%1 = getelementptr inbounds %class.A,%class.A* %this, i32 0, i32 0
+	store i32 null, i32* %1, align 4
+	%2 = getelementptr inbounds %class.A,%class.A* %this, i32 0, i32 0
+	store i32 null, i32* %2, align 4
 }
 define void @_CN1B_FN1B_(%class.B %this ) {
 	%0 = bitcast %class.B* %this to %class.A*
 	call void @_CN1A_FN1A_(%class.A* %0
 	%1 = getelementptr inbounds %class.B,%class.B* %this, i32 0, i32 0
-	store %class.D null, %class.D* %1, align 4
+	store i8* null, i8** %1, align 4
+	%2 = getelementptr inbounds %class.B,%class.B* %this, i32 0, i32 0
+	store i8 null, i8* %2, align 4
+	%3 = getelementptr inbounds %class.B,%class.B* %this, i32 0, i32 0
+	store i32 null, i32* %3, align 4
+	%4 = getelementptr inbounds %class.B,%class.B* %this, i32 0, i32 0
+	store %class.D null, %class.D* %4, align 4
+	%5 = getelementptr inbounds %class.B,%class.B* %this, i32 0, i32 0
+	store i32 null, i32* %5, align 4
+	%6 = getelementptr inbounds %class.B,%class.B* %this, i32 0, i32 0
+	store i32 null, i32* %6, align 4
+	%7 = getelementptr inbounds %class.B,%class.B* %this, i32 0, i32 0
+	store i32 null, i32* %7, align 4
 }
 define void @_CN1C_FN1C_(%class.C %this ) {
 	%0 = bitcast %class.C* %this to %class.B*
 	call void @_CN1B_FN1B_(%class.B* %0
 	%1 = getelementptr inbounds %class.C,%class.C* %this, i32 0, i32 0
-	store %class.D null, %class.D* %1, align 4
+	store i8* null, i8** %1, align 4
+	%2 = getelementptr inbounds %class.C,%class.C* %this, i32 0, i32 0
+	store i8 null, i8* %2, align 4
+	%3 = getelementptr inbounds %class.C,%class.C* %this, i32 0, i32 0
+	store i32 null, i32* %3, align 4
+	%4 = getelementptr inbounds %class.C,%class.C* %this, i32 0, i32 0
+	store %class.D null, %class.D* %4, align 4
+	%5 = getelementptr inbounds %class.C,%class.C* %this, i32 0, i32 0
+	store i32 null, i32* %5, align 4
+	%6 = getelementptr inbounds %class.C,%class.C* %this, i32 0, i32 0
+	store i32 null, i32* %6, align 4
+	%7 = getelementptr inbounds %class.C,%class.C* %this, i32 0, i32 0
+	store i32 null, i32* %7, align 4
 }
 define void @_CN4Main_FN4Main_(%class.Main %this ) {
 	%0 = bitcast %class.Main* %this to %class.Object*

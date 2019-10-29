@@ -418,51 +418,17 @@ public class Codegen {
 		}
 
 		// dispatch
-		else if(expr.getClass() == AST.dispatch.class)
-		{
-			AST.dispatch str = (AST.dispatch)expr;
-			if( !(str.caller.getClass() == AST.object.class && ((AST.object)str.caller).name.equals("self")) )
-				handleClassMethod(IRClass, formalMap, str.caller, out, false);
-			String thisReg = ""+registerCounter;
+		else if(expr.getClass() == AST.static_dispatch.class) {
+			AST.static_dispatch str = (AST.static_dispatch)expr;
+			List<AST.expression> expression_listsd = new ArrayList<AST.expression>();
+            expression_listsd = str.actuals;
 
-			String caller = str.caller.type;
-			if( (str.caller.getClass() == AST.object.class && ((AST.object)str.caller).name.equals("self")) ) {
-				caller = IRClass.name;
-				thisReg = "this";
-			} else {
-
-				// Go through the attrs of the class called, and allocate if there's an initialisation in the attributes node.
-
-				String cname = caller;
-				for (Map.Entry<String, AST.attr> attrEntry : nameToIrclassMap.get(cname).alist.entrySet()) {
-					AST.attr attrNode = attrEntry.getValue();
-					if (attrNode.value.getClass() == AST.new_.class) {
-						AST.new_ node = (AST.new_)attrNode.value;
-						out.println("%"+ ++registerCounter +" = alloca " + CoolUtils.printTypes2(node.typeid)+ ", align 4");
-						out.println("%"+ ++registerCounter  +" = getelementptr inbounds %class." + cname + ", %class."+cname+"* %" + thisReg + ", i32 0, i32 "+nameToIrclassMap.get(cname).attrIndex.get(attrNode.name));
-						out.println("store " + CoolUtils.printTypes2(node.typeid)+ "* %"+ (registerCounter - 1) +", " + CoolUtils.printTypes2(node.typeid)+ "** %"+registerCounter+", align 8");
-					}
-
-				}
-			}
-
-			String methodName = str.name;
-			String mType =   CoolUtils.printTypes(nameToIrclassMap.get(caller).mlist.get(methodName).typeid);
-			String dispatchStr = "call " + mType + " @"+caller+"_"+methodName + "("+ CoolUtils.printTypes(caller) + " %"+thisReg;
-
-			for(int i = 0; i < str.actuals.size(); i++)
+            for(int i = 0; i < expression_listsd.size(); i++)
 			{
-				expr = str.actuals.get(i);
+				expr = expression_listsd.get(i);
+
 				handleClassMethod(IRClass, formalMap, expr, out, false);
-				dispatchStr += ", "+CoolUtils.printTypes(expr.type) + " %"+ registerCounter;
 			}
-
-			dispatchStr += ")";
-
-			out.println("%"+ ++registerCounter + " = " + dispatchStr);
-
-			if (lastExpr)
-				out.println("ret "+ mType + " %" + registerCounter);
 		}
 
 		// if then else

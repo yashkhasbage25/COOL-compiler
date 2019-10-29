@@ -11,17 +11,17 @@ public class Codegen{
 	private void handleClassMethod(IRClass irClass, HashMap<STring, AST.formal> formalMap, AST.expression expr, PrintWriter out, boolean lastExpr) {
 		// assignment expression
 		if(expr.getClass() == AST.assign.class) {
-			AST.assign str = (AST.assign) expr;
-			AST.expression exp = str.e1;
-			if(irClass.alist.containsKey(str.name)) {
+			AST.assign assignExpr = (AST.assign) expr;
+			AST.expression exp = assignExpr.e1;
+			if(irClass.alist.containsKey(assignExpr.name)) {
 				out.println("%" + ++regNo + " = getelementptr inbounds %class."
 				+ irClass.name + ", %class." + irClass.name +
-				"* %this, i32 0, i32 " + irClass.attrOffset.get(str.name));
+				"* %this, i32 0, i32 " + irClass.attrOffset.get(assignExpr.name));
 				reg = "%" + regNo;
-				varType = IRType(irClass.alist.get(str.name).typeid);
+				varType = IRType(irClass.alist.get(assignExpr.name).typeid);
 			} else {
-				reg = "%" + str.name;
-				varType = IRType(formalMap.get(str.name).typeid);
+				reg = "%" + assignExpr.name;
+				varType = IRType(formalMap.get(assignExpr.name).typeid);
 			}
 
 			handleClassMethod(irClass, fmap, exp, out, false);
@@ -93,7 +93,7 @@ public class Codegen{
 			int int4bool = 0;
 			if(bool) int4bool = 1;
 
-			out.println("%" + ++regNo + " = alloca i32, align 1");
+			out.println("%" + ++regNo + " = alloca i32, align 1"); ////////////////////
 			out.println("store i32 " + int4bool + ", i32* %" + regNo + ", align 4");
 			out.println("%" + ++regNo + " = load i32, i32* %" + (regNo-1) + ", align 4");
 
@@ -204,7 +204,7 @@ public class Codegen{
 			if(lastExpr)
 				out.println("ret "+IRType(e3.type) + " %" + regNo++);
 
-		    out.println("br label %thenbody"+tag);
+		    out.println("br label %thenbody"+tag); ///////////////////
 			out.println("thenbody"+tag+":");
 
 			if(lastExpr)
@@ -212,7 +212,7 @@ public class Codegen{
 
 		}
 
-		else if(expr.getClass() == AST.block.class)
+		else if(expr.getClass() == AST.block.class) /////////////
 		{
 			AST.block str = (AST.block)expr;
 			List<AST.expression> listExp = new ArrayList<AST.expression>();
@@ -313,6 +313,6 @@ public class Codegen{
 			if(lastExpr) {
 				out.println("ret "+IRType(str.type) + " %" + (regNo));
 			}
-		}				
+		}
 	}
 }

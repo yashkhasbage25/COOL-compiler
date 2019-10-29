@@ -3,6 +3,7 @@ package cool;
 import cool.AST;
 import java.util.*;
 import cool.AST.class_;
+import java.io.PrintWriter;
 import cool.VariableMapping;
 
 class CoolUtils {
@@ -30,7 +31,7 @@ class CoolUtils {
 
     }
 
-    public static void PrintMethodsObject(Printwriter out) {
+    public static void PrintMethodsObject(PrintWriter out) {
         out.println("define %class.Object* @_CN6Object_FN5abort_( %class.Object* %this ) noreturn {\n" + "entry:\n"
                 + "\tcall void @exit( i32 1 )\n" + "\tret %class.Object* null\n" + "}\n");
 
@@ -41,7 +42,7 @@ class CoolUtils {
                 + "\tret [1024 x i8]* %retval\n" + "}\n");
     }
 
-    public static void PrintMethodsIO(Printwriter out) {
+    public static void PrintMethodsIO(PrintWriter out) {
         out.println("define %class.IO* @_CN2IO_FN10out_string_( %class.IO* %this, [1024 x i8]* %str ) {\n" + "entry:\n"
                 + "\t%0 = call i32 (i8*, ...) @printf( i8* bitcast ( [3 x i8]* @strformatstr to i8* ), [1024 x i8]* %str )\n"
                 + "\tret %class.IO* %this\n" + "}\n");
@@ -61,7 +62,7 @@ class CoolUtils {
                 + "\t%retval = load i32, i32* %1\n" + "\tret i32 %retval\n" + "}\n");
     }
 
-    public static void PrintMethodsString(Printwriter out) {
+    public static void PrintMethodsString(PrintWriter out) {
         out.println("define i32 @_CN6String_FN6length_( [1024 x i8]* %this ) {\n" + "\tentry:\n"
                 + "\t%0 = bitcast [1024 x i8]* %this to i8*\n" + "\t%1 = call i64 @strlen( i8* %0 )\n"
                 + "\t%retval = trunc i64 %1 to i32\n" + "\tret i32 %retval\n" + "}\n");

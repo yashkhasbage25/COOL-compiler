@@ -81,6 +81,7 @@ public class Codegen {
 
 	private void PrintMethods(List<String> dfsOrdering, PrintWriter out) {
 		for (String s : dfsOrdering) {
+			System.out.println(s);
 			if (s.equals("Object"))
 				CoolUtils.PrintMethodsObject(out);
 			else if (s.equals("IO"))
@@ -88,7 +89,7 @@ public class Codegen {
 			else if (s.equals("String"))
 				CoolUtils.PrintMethodsString(out);
 			else if (s.equals("Int") || s.equals("Bool"))
-				return;
+				continue;
 			else {
 				HashMap<String, AST.formal> fmap = new HashMap<String, AST.formal>();
 				IRClass currClass = nameToIrclassMap.get(s);
@@ -122,6 +123,15 @@ public class Codegen {
 			int attrCounter = 0;
 			String formals = CoolUtils.printTypes(s) + " %this";
 			out.println("define void @" + CoolUtils.getMangledName(s, s) + "(" + formals + " ) {");
+			String parentName = Graph.parentNameMap.get(s);
+			if (parentName != null) {
+				out.println(
+						"\t%" + (registerCounter) + " = bitcast %class." + s + "* %this to %class." + parentName + "*");
+				out.println("\tcall void @" + CoolUtils.getMangledName(parentName, parentName) + "(%class." + parentName
+						+ "* %" + registerCounter);
+				registerCounter++;
+
+			}
 			for (AST.attr a : nameToIrclassMap.get(s).alist.values()) {
 				System.out.println(s + " " + a);
 				if (!(a.value instanceof AST.no_expr)) {

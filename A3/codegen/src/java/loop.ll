@@ -125,16 +125,18 @@ store i32 10, i32* %2, align 4
 br i1 %4, label %loopbody-1, label %pool-1
 loopbody-1:
 %5 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 0
-%6 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 0
-%7 = load  i32, i32* %6, align 4
-%8 = alloca i32, align 4
-store i32 1, i32* %8, align 4
-%9 = load i32, i32* %8, align 4
-%10 = add nsw i32 %7, %9
-store i32 %10, i32* %6, align 4
+%6 = load  i32, i32* %5, align 4
+%7 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 0
+%8 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 0
+%9 = load  i32, i32* %8, align 4
+%10 = alloca i32, align 4
+store i32 1, i32* %10, align 4
+%11 = load i32, i32* %10, align 4
+%12 = add nsw i32 %9, %11
+store i32 %12, i32* %8, align 4
 br label %predicate-1
 pool-1:
-ret %class.Object %10
+ret %class.Object %12
 }
 
 define void @_CN4Main_FN4Main_(%class.Main* %this ) {

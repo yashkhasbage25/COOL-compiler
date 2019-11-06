@@ -8,8 +8,10 @@ public class IRClass {
 	public HashMap<String, AST.attr> alist;
 	public HashMap<String, AST.method> mlist;
 	public HashMap<String, Integer> attrIndex;
+	public Int size;
 
-	IRClass(String nm, String pr, HashMap<String, AST.attr> al, HashMap<String, AST.method> ml) {
+	IRClass(String nm, String pr, HashMap<String, AST.attr> al, HashMap<String, AST.method> ml, Int s) {
+		size = s;
 		name = new String(nm);
 		if (pr != null)
 			parent = new String(pr);
@@ -17,11 +19,11 @@ public class IRClass {
 		alist.putAll(al);
 		mlist = new HashMap<String, AST.method>();
 		mlist.putAll(ml);
-		int ind=0;
+		int ind = 0;
 		System.out.println(alist);
 		attrIndex = new HashMap<String, Integer>();
-		if(alist.size() > 0)
-			for(Map.Entry<String,AST.attr> entry: alist.entrySet())
-				attrIndex.put(entry.getKey(),ind++);
+		if (alist.size() > 0)
+			for (Map.Entry<String, AST.attr> entry : alist.entrySet())
+				attrIndex.put(entry.getKey(), ind++);
 	}
 }

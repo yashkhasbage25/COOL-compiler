@@ -267,11 +267,15 @@ public class Codegen {
 			HashMap<String, AST.method> curr_mlist = new HashMap<String, AST.method>();
 			curr_alist.putAll(parentClass.alist);
 			// curr_mlist.putAll(parentClass.mlist); not needed
-
+			Int size = 0;
 			for (AST.feature feature : currAstClass.features) {
 				if (feature.getClass() == AST.attr.class) {
 					AST.attr attr = (AST.attr) feature;
 					curr_alist.put(attr.name, attr);
+					if (attr.typeid == "Int" || attr.typeid == "Bool")
+						size += 4;
+					else
+						size += 8;
 				}
 			}
 
@@ -282,7 +286,7 @@ public class Codegen {
 				}
 			}
 
-			IRClass currClass = new IRClass(currAstClass.name, currAstClass.parent, curr_alist, curr_mlist);
+			IRClass currClass = new IRClass(currAstClass.name, currAstClass.parent, curr_alist, curr_mlist, size);
 			nameToIrclassMap.put(s, currClass);
 		}
 	}
@@ -310,8 +314,29 @@ public class Codegen {
 			out.println("store " + varType + " %" + registerCounter + ", " + varType + "* " + reg + ", align 4"); // check
 			if (lastExpr)
 				out.println("ret " + varType + " %" + registerCounter);
+		} else if (expr.getClass() == AST.object.class) {
+			AST.object e = (AST.object) expr;
+			int attrindex = ci.attrList.indexOf(e.name);
+			for (AST.formal formals : method.formals) {
+				if (formals.name.equals(e.name)) {
+					attrindex = -1;
+					break;
+				}
+			}
+			if (attrindex == -1) {
+				if (changedFormals.indexOf(e.name) == -1)
+					return parseType(e.type) + " %" + e.name;
+				else {
+					System.out.println("Forbidden node Check again");
+				}
+			}
+			varType = CoolUtils.printTypes(irclass.name);
+			out.println("\t%" + (++registerCounter) + " = getelementptr inbounds " + varType + ", " + varType
+					+ "* %self, i32 0, i32 " + attrindex);
+			out.println("\t%" + (++registerCounter) + " = load " + CoolUtils.printTypes(e.type) + ", "
+					+ CoolUtils.printTypes(e.type) + "* %" + (registerCounter - 1) + ", align 4");
+			// return CoolUtils.printTypes(e.type) + " %" + registerCounter;
 		}
-
 		// plus expression
 		else if (expr.getClass() == AST.plus.class) {
 			AST.plus plusExpr = (AST.plus) expr;
@@ -431,13 +456,12 @@ public class Codegen {
 		}
 
 		// dispatch
-		else if(expr.getClass() == AST.static_dispatch.class) {
-			AST.static_dispatch str = (AST.static_dispatch)expr;
+		else if (expr.getClass() == AST.static_dispatch.class) {
+			AST.static_dispatch str = (AST.static_dispatch) expr;
 			List<AST.expression> expression_listsd = new ArrayList<AST.expression>();
-            expression_listsd = str.actuals;
+			expression_listsd = str.actuals;
 
-            for(int i = 0; i < expression_listsd.size(); i++)
-			{
+			for (int i = 0; i < expression_listsd.size(); i++) {
 				expr = expression_listsd.get(i);
 
 				handleClassMethod(IRClass, formalMap, expr, out, false);

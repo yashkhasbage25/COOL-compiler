@@ -19,6 +19,12 @@ class CoolUtils {
     // the only default function name
     static final String MAIN_FN_STR = "main";
 
+    static final int OBJECT_CLASS_SIZE = 12;
+    static final int INT_CLASS_SIZE = 4;
+    static final int IO_CLASS_SIZE = 12;
+    static final int BOOL_CLASS_SIZE = 4;
+    static final int STRING_CLASS_SIZE = 8;
+
     public static String printTypes(String s) {
         if (s.equals(INT_TYPE_STR))
             return "i32";

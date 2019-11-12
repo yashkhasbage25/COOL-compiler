@@ -3,3 +3,4 @@ A2/*.jar
 A2/semantic/src/java/cool/*.class
 A3/codegen/src/java/cool/*.class
 temp
+*.vscode

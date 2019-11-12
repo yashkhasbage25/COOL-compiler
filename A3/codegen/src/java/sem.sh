@@ -4,4 +4,5 @@ cd cool
 make
 cd ..
 java -cp /usr/local/lib/antlr-4.5-complete.jar:../java cool.CodegenTest ../test_cases/$1
+rm cool/*.class
 clang test__1.ll

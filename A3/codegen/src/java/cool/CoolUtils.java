@@ -186,4 +186,6 @@ class CoolUtils {
         }
         return null;
     }
+
+    public static Map<String, String> createFormalMap(AST.method, )
 }

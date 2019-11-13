@@ -10,13 +10,14 @@ import cool.InheritanceGraph;
 
 public class Codegen {
 
-	public int ifCount;
-	public int loopCount;
-	public List<String> globalStr;
-	public Counter stringCounter;
-	public Counter registerCounter;
-	public InheritanceGraph inheritanceGraph;
-	public Map<String, class_> className2ClassMap;
+
+	private List<String> globalStr;
+	private Counter stringCounter;
+	private Counter registerCounter;
+	private Counter ifCounter;
+	private Counter loopCounter;
+	private InheritanceGraph inheritanceGraph;
+	private Map<String, class_> className2ClassMap;
 	private HashMap<String, IRClassInfo> className2IRClassInfoMap;
 
 	public Codegen(AST.program program, PrintWriter out) {
@@ -39,14 +40,14 @@ public class Codegen {
 
 	private void initializeDefaultAttributes() {
 
-		ifCount = 0;
-		loopCount = 0;
+		ifCounter = new Counter();
+		loopCounter = new Counter();
+		stringCounter = new Counter();
+		registerCounter  = new Counter();
 		inheritanceGraph = new InheritanceGraph();
 		globalStr = new ArrayList<String>();
 		className2ClassMap = new HashMap<String, class_>();
 		className2IRClassInfoMap = new HashMap<String, IRClassInfo>();
-		stringCounter = new Counter();
-		registerCounter  = new Counter();
 
 	}
 
@@ -232,6 +233,7 @@ public class Codegen {
 				for (Map.Entry<String, AST.method> entry : classInfo.classMethods.entrySet()) {
 					String methodName = entry.getKey();
 					AST.method method = entry.getValue();
+					List<String> blocks = new ArrayList<>();
 					out.print("define " + CoolUtils.printTypes(method.typeid) + " @"
 							+ CoolUtils.getMangledName(className, methodName)
 							+ "(%class." + className + "* %this ");
@@ -245,6 +247,8 @@ public class Codegen {
 					out.println("){");
 					out.println("entry:");
 					registerCounter.reset();
+					blocks.add("entry");
+					// TODO
 					handleClassMethod(currClass, formalMap, method.body, out, true);
 					out.println("}\n");
 				}
@@ -347,7 +351,9 @@ public class Codegen {
 		}
 	}
 
-	private String handleExpr(IRClass IRClass, HashMap<String, AST.formal> formalMap,
+	// deprecated
+	// IRClassInfo method expr changedformals blocks iut
+	private String _handleExpr(IRClass IRClass, HashMap<String, AST.formal> formalMap,
 		AST.expression expr, List<String> blocks, PrintWriter out) {
 		if(expr instanceof AST.bool_const) {
 			AST.bool_const e = (AST.bool_const) expr;
@@ -416,8 +422,8 @@ public class Codegen {
 			AST.eq e = (AST.eq) expr;
 			String e1 = handleExpr(IRClass, formalMap, e.e1, blocks, out);
 			String e2 = handleExpr(IRClass, formalMap, e.e2, blocks, out);
-			resgisterCounter.incrementIndex();
-			our.println("\t%" + resgisterCounter.getIndex() + " = icmp eq i32 "
+			registerCounter.incrementIndex();
+			our.println("\t%" + registerCounter.getIndex() + " = icmp eq i32 "
 				+ e1.substring(4) + ", " + e2.substring(4));
 			return "i32 %" + registerCounter.getIndex();
 		} else if(expr instanceof AST.leq) {
@@ -477,7 +483,7 @@ public class Codegen {
 			registerCounter.incrementIndex();
 			out.println("\t%" + registerCounter.getIndex() + " = mul nsw i32 "
 				+ e1.substring(4) + ", " + e2.substring(4));
-			return "i32 %" + resgisterCounter.getIndex();
+			return "i32 %" + registerCounter.getIndex();
 		} else if(expr instanceof AST.sub) {
 			AST.sub e = (AST.sub) expr;
 			String e1 = handleExpr(IRClass, formalMap, e.e1, blocks, out);
@@ -485,7 +491,7 @@ public class Codegen {
 			registerCounter.incrementIndex();
 			out.println("\t%" + registerCounter.getIndex() + " = sub nsw i32 "
 				+ e1.substring(4) + ", " + e2.substring(4));
-			return "i32 %" + resgisterCounter.getIndex();
+			return "i32 %" + registerCounter.getIndex();
 		} else if(expr instanceof AST.plus) {
 			AST.plus e = (AST.plus) expr;
 			String e1 = handleExpr(IRClass, formalMap, e.e1, blocks, out);
@@ -493,7 +499,7 @@ public class Codegen {
 			registerCounter.incrementCounter();
 			out.println("\t%" + registerCounter.getIndex() + " = add nsw i32 "
 				+ e1.substring(4) + ", " + e2.substring(4));
-			return "i32 %" + resgisterCounter.getIndex();
+			return "i32 %" + registerCounter.getIndex();
 		} else if(expr instanceof AST.isvoid) {
 			AST.isvoid e = (AST.isvoid) expr;
 			String e1 = handleExpr(IRClass, formalMap, e.e1, blocks, out);
@@ -555,7 +561,7 @@ public class Codegen {
 				registerCounter.incrementIndex();
 				out.println("\t%"+ registerCounter.getIndex() + " = getelementptr inbounds "
 					+ stype + ", " + stype + "* %self, i32 0, i32 " + attri);
-				out.println("\tstore " + e1 + ", " + type + "* %" + registerCounter.getIndxe()
+				out.println("\tstore " + e1 + ", " + type + "* %" + registerCounter.getIndex()
 					+ ", align 4");
 				return e1;
 			}
@@ -631,7 +637,7 @@ public class Codegen {
 				+ "@_CN2IO_FN9out_string(%class.IO* null, [1024 x i8]* %"
 				+ registerCounter.prevIndex() +")");
 			out.println("\tcall void @exit(i32 1)");
-			out.printlnt("\tbr label %if.else" + ifCount);
+			out.println("\tbr label %if.else" + ifCount);
 			out.println("if.else" + ifCount + ":");
 			blocks.add("if.else" + ifCount);
 			String funcname = "@_CN" + e.typeid + e.typeid.length() + "_FN" + e.name /////////////////////
@@ -641,6 +647,256 @@ public class Codegen {
 		return "";
 	}
 
+	// IRClassInfo method expr changedformals blocks iut
+	private String handleExpr(IRClassInfo classInfo, AST.expression expr, Map<String, String>formalsMap, List<String> blocks, PrintWriter out) {
+		if(expr instanceof AST.bool_const) {
+			AST.bool_const boolExpr = (AST.bool_const) expr;
+			return "i32 " + (boolExpr ? 1 : 0);
+		} else if(expr instanceof AST.string_const) {
+			AST.string_const stringExpr = (AST.string_const) expr;
+			String ty = "[" + (stringExpr.value.length() + 1) + " x i8]";
+			globalStrings.add("@.str" + stringCounter.incrementIndex()
+				+ " = private unnamed_addr constant " + ty + " c\""
+				+ stringExpr.value + "\\00\", align 1\n");
+			out.println("\t%" + registerCounter.incrementIndex() + " = bitcast "
+				+ ty + "* @.str" + stringCounter.prevIndex() + " to [1024 x i8]*");
+			return "[1024 x i8]* %" + registerCounter.getIndex();
+		} else if(expr instanceof AST.int_const) {
+			AST.int_const intExpr = (AST.int_const) expr;
+			return "i32 " + intExpr.value;
+		} else if(expr instanceof AST.object) {
+			AST.object objectExpr = (AST.object) expr;
+			if((classInfo.classAttrs.contains == -1) || (formalsMap.containsKey(objectExpr))) {
+				if(! formalsMap.containsKey(objectExpr)) {
+					return CoolUtils.parseType(objectExpr.type) + " %" + objectExpr.name;
+				} else {
+					String ty =  CoolUtils.parseType(objectExpr.type);
+					out.println("\t%" + registerCounter.incrementIndex() + " = load"
+						+ ty + "* %" + objectExpr.name + ".addr, align 4");
+					return ty + " %" + registerCounter.getIndex();
+				}
+				String parseTypeName = CoolUtils.parseType(classInfo.name);
+				parseTypeName = parseTypeName.substring(0, parseTypeName.length() - 1);
+				// TODO
+				out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds "
+					+ parseTypeName + ", " + parseTypeName + "* %self, i32 0, i32 " + classInfo.classAttrs.indexOf(objectExpr.name));
+				out.println("\t%" + registerCounter.incrementIndex() + " = load "
+					+ CoolUtils.parseType(objectExpr.type) + ", " + CoolUtils.parseType(objectExpr.type)
+					+ "* %" + registerCounter.prevIndex() + ", align 4");
+				return CoolUtils.parseType(objectExpr.type) + " %" + registerCounter.getIndex();
+			} else if(expr instanceof AST.comp) {
+				AST.comp compExpr = (AST.comp) expr;
+				String e1 = handleExpr(classInfo, compExpr.e1, formalsMap, blocks, out);
+				String e2 = handleExpr(classInfo, compExpr.e2, formalsMap, blocks, out);
+				out.println("\t%" + registerCounter.incrementIndex() + " = sub nsw i32 1, "
+					+ e1.substring(4));
+				return "i32 %" + registerCounter.getIndex();
+			} else if(expr instanceof AST.eq) {
+				AST.eq eqExpr = (AST.eq) expr;
+				String e1 = handleExpr(classInfo, eqExpr.e1, formalsMap, blocks, out);
+				String e2 = handleExpr(classInfo, eqExpr.e2, formalsMap, blocks, out);
+				out.println("\t%" + registerCounter.incrementIndex() + " = icmp eq 132 "
+				 + e1.substring(4) + ", " + e2.substring(4));
+				return "i32 %" + registerCounter.getIndex();
+			} else if(expr instanceof AST.leq) {
+				AST.leq leqExpr = (AST.leq) expr;
+				String e1 = handleExpr(classInfo, leqExpr.e1, formalsMap, blocks, out);
+				String e2 = handleExpr(classInfo, leqExpr.e2, formalsMap, blocks, out);
+				out.println("\t%" + registerCounter.incrementIndex() + " = icmp sle i32 "
+					+ e1substring(4) + ", " + e2.substring(4));
+				return "i32 %" + reigsterCounter.getIndex();
+			} else if(expr instanceof AST.lt) {
+				AST.lt ltExpr = (AST.lt) expr;
+				String e1 = handleExpr(classInfo, ltExpr.e1, formalsMaps, blocks, out);
+				String e2 = handleExpr(classInfo, ltExpr.e2, formalsMaps, blocks, out);
+				out.println("\t%" + registerCounter.incrementIndex() + " = icmp slt i32"
+					+ e1.substring(4) + ", " + e2.substring(4));
+				return "i32 %" + registerCounter.getIndex();
+			} else if(expr instanceof AST.neq) {
+				AST.neg negExpr = (AST.neq) expr;
+				String e1 = handleExpr(classInfo, negExpr.e1, formalsMap, blocks, out);
+				out.println("\t%" + registerCounter.incrementIndex() + " = sub nsw i32 0," + e1.substring(4));
+			} else if(expr instanceof AST.divide) {
+				AST.divide divideExpr = (AST.divide) expr;
+				String e1 = handleExpr(classInfo, divideExpr.e1, formalsMap, blocks, out);
+				String e2 = handleExpr(classInfo, divideExpr.e2, formalsMap, blocks, out);
+
+				out.println("\t%" + registerCounter.incrementIndex() + " = icmp eq i32 0, "
+					+ e1.substring(4));
+				ifCounter.incrementCounter();
+				out.println("\tbr i1 %" + registerCounter.getIndex() + ", label %if.then"
+					+ ifCounter.getIndex() + ", label %if.else" + ifCounter.getIndex());
+				out.println("if.then" + ifCounter.getIndex() + ":");
+				blocks.add("if.then" + ifCounter.getIndex());
+				out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [22 x i8]* @Abortdivby0 to [1024 x i8]*");
+				out.println("\t%" + registerCounter.incrementIndex() + " = call %class.IO* @_CN2IO_FN9out_string(%class.IO* null, [1024 x i8]* %"
+					+ registerCounter.prevIndex() + ")");
+				out.println("\tcall void @exit(i32 1)");
+				out.println("\tbr label %if.else" + ifCounter.getIndex());
+				out.println("if.else" + ifCounter.getIndex() + ":");
+				blocks.add("if.else" + ifCounter.getIndex());
+				out.println("\t%" + registerCounter.getIndex() + " = sdiv i32 "
+					+ e1.substring(4) + ", " + e2.substring(4));
+				return "i32 " + registerCounter.getIndex();
+			} else if(expr instanceof AST.mul) {
+				AST.mul mulExpr = (AST.mul) expr;
+				String e1 = handleExpr(classInfo, mulExpr.e1, formalsMap, blocks, out);
+				String e2 = handleExpr(classInfo, mulExpr.e2, formalsMap, blocks, out);
+				out.println("\t%" + registerCounter.incrementIndex() + " = mul nsw i32 "
+					+ e1.substring(4) + ", " + e2.substring(4));
+				return "i32 %" + registerCounter.getIndex();
+			} else if(expr instanceof AST.sub) {
+				AST.sub subExpr = (AST.sub) expr;
+				String e1 = handleExpr(classInfo, subExpr.e1, formalsMap, blocks, out);
+				String e2 = handleExpr(classInfo, subExpr.e2, formalsMap, blocks, out);
+				out.println("\t%" + registerCounter.incrementIndex() + " = sub nsw i32"
+					+ e1.substring(4) + ", " + e2.substring(4));
+				return "i32 %" + registerCounter.getIndex();
+			} else if(expr instanceof AST.plus) {
+				AST.plus pluexExpr = (AST.plus) expr;
+				String e1 = handleExpr(classInfo, plusExpr.e1, formalsMap, blocks, out);
+				String e2 = handleExpr(classInfo, plusExpr.e2, formalsMap, blocks, out);
+				out.println("\t%" + registerCounter.incrementIndex() + " = add nsw i32 "
+					+ e1.substring(4) + ", " + e2.substring(4));
+				return "i32 %" + registerCounter.getIndex();
+			} else if(expr instanceof AST.isvoid) {
+				AST.isvoid isvoidExpr = (AST.isvoid) expr;
+				String e1 = handleExpr(classInfo, isvoidExpr.e1m formalsMap, blocks, out);
+				out.println("\t%" + registerCounter.incrementIndex() + " = icmp eq "
+					+ e1 + ", null");
+				return "i32 %" + registerCounter.getIndex();
+			} else if(expr instanceof AST.new_) {
+				AST.new_ newExpr = (AST.new_) expr;
+				String type = CoolUtils.parseType(newExpr.typeid);
+				int size = className2Size.get(type);
+				out.println("\t%" + registerCounter.incrementIndex() + " = call noalias i8* @malloc(i64"
+					+ size + ")");
+				out.println("\t%" + registerCounter.incrementIndex()
+					+ " = bitcast i8* %" + registerCounter.prevIndex()
+					+ " to " + type);
+				out.println("\t%" + registerCounter.incrementIndex() + " = call "
+					+ "i32 @_CN" + newExpr.typeid.length() + newExpr.typeid + "_FN"
+					+ type.length() + type + "(" + type + " %" + registerCounter.prevIndex() + ")");
+				return type + " %" + registerCounter.prevIndex();
+			} else if(expr instanceof AST.assign) {
+				AST.assign assignExpr = (AST.assign) expr;
+				String e1 = handleExpr(classInfo, assignExpr.e1, formalsMap, blocks, out);
+
+				String type = CoolUtils.parseType(e.type);
+				String stype = CoolUtils.parseType(classInfo.name);
+				stype = stype.substring(0, stype.length() - 1);
+				String e1type = CoolUtils.reverseParseTypeValue(e1);
+
+				if(!e1type.equals(type)) {
+					if(e1type.equals(type)) {
+						if(e1type.equals("i32")) {
+							out.println("\t%" + registerCounter.incrementIndex()
+								+ " = call noalias i8* @malloc(i64 8)");
+							out.println("\t%" + registerCounter.incrementIndex()
+								+ " = bitcast i8* %" + registerCounter.prevIndex()
+								+ " to " + type);
+						} else {
+							out.println("\t%" + registerCounter.incrementIndex()
+								+ " = bitcast " + e1 + " to " + type);
+						}
+						e1 = type + " %" + registerCounter.getIndex();
+					}
+				}
+
+				// TODO
+			} else if(expr instanceof AST.block) {
+				AST.block blockExpr = (AST.block) expr;
+				String register = "";
+				for(AST.expression exprInBlock: blockExpr.l1) {
+					register = handleExpr(classInfo, exprInBlock, formalsMap, blocks, out);
+				}
+				return register;
+			} else if(expr instanceof AST.loop) {
+				AST.loop loopExpr = (AST.loop) expr;
+				out.println("\tbr label %loop.cond" + loopCounter.incrementIndex());
+				out.println("loop.cond" + loopCounter.getIndex() + ":");
+				blocks.add("loop.cond" + loopCounter.getIndex());
+				String predicate = handleExpr(classInfo, loopExpr.predicate, formalsMap, blocks, out);
+				out.println("\tbr i1 " + predicate.substring(4) + ", label %loop.body"
+					+ loopCounter.getIndex() + " , label %loop.end" + loopCounter.getIndex());
+				out.println("loop.body" + loopCounter.getIndex() + ":");
+				blocks.add("loop.body" + loopCounter.getIndex());
+				String body = handleExpr(classInfo, loopExpr.body, formalsMap, blocks, out);
+				out.println("\tbr label %loop.cond" + loopCounter.getIndex());
+				out.println("loop.end" + loopCounter.getIndex() + ":");
+				out.println("loop.end" + loopCounter.getIndex());
+				return body;
+			} else if(expr instanceof AST.cond) {
+				AST.cond condExpr = (AST.cond) expr;
+				int ifCount = ifCounter.incrementIndex();
+				String predicate = handleExpr(classInfo, condExpr.predicate, formalsMap, blocks, out);
+				out.println("\tbr i1 " + predicate.substring(4) + ", label %if.then"
+					+ ifCount + ", label %if.else" + ifCount);
+				out.println("if.then" + ifCount + ":");
+				blocks.add("if.then" + ifCount);
+				String ifBody = handleExpr(classInfo, condExpr.ifbody, formalsMap, blocks, out);
+				String ifBodyLabel = blocks.get(blocks.size() - 1);
+				ifBody = Coolutils.reverseParseTypeValueVar(ifBody);
+				out.println("\tbr label %if.end" + ifCount);
+				out.println("if.else" + ifCount + ":");
+				blocks.add("if.else" + ifCount);
+				String elseBody = handleExpr(classInfo, condExpr.elsebody, formalsMap, blocks, out);
+				String elseBodyLabel = blocks.get(blocks.length() - 1);
+				elseBody = CoolUtils.reverseParseTypeValueVar(elseBody);
+				out.println("\tbr label %if.end" + ifCount);
+				out.println("if.end" + ifCount + ":");
+				blocks.add("if.end" + ifCount);
+				out.println("\t%" + registerCounter.incrementIndex() + " = phi "
+					+ CoolUtils.parseType(condExpr.type) + " [" + ifBody + ", %"
+					+ ifBodyLabel + "], [" + elseBody + ", %" + elseBodyLabel + "]");
+				return CoolUtils.parseType(condExpr.type) + " %" + registerCounter.getIndex();
+			} else if(expr instanceof AST.static_dispatch) {
+				AST.static_dispatch staticDispatchExpr = (AST.static_dispatch) expr;
+				String caller = handleExpr(classInfo, condExpr.caller, formalsMap, blocks, out);
+				List<String> actuals = new ArrayList<>();
+				for(AST.expression actual: staticDispatchExpr.actuals) {
+					String a = handleExpr(classInfo, actual, formalsMap, blocks, out);
+					actuals.add(a);
+				}
+
+				ifCounter.incrementIndex();
+				out.println("\t%" + registerCounter.incrementIndex() + " = icmp eq "
+					+ caller + ", null");
+				out.println("\tbr i1 %" + registerCounter.getIndex() + ", label %if.then"
+					+ ifCounter.getIndex() + ", label %if.else" + ifCounter.getIndex());
+				out.println("if.then" + ifCounter.getIndex() + ":");
+				blocks.add("if.then" + ifCounter.getIndex());
+				out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [25 x i8]* @Abortdisvoid to [1024 x i8]*");
+				out.println("\t%" + registerCounter.incrementIndex()
+					+ " = call %class.IO* @_CN2IO_FN9out_string(%class.IO* null, [1024 x i8]* %"
+					+ registerCounter.prevIndex() + ")");
+				out.println("\tcall void @exit(i32 1)");
+				out.println("\tbr label %if.else" + ifCount.getIndex());
+
+				out.println("if.else" + ifCounter.getIndex() + ":");
+				blocks.add("if.else" + ifCounter.getIndex());
+
+				String funcName = "@_CN" + staticDispatchExpr.typeid.length() +
+					staticDispatchExpr.typeid + staticDispatchExpr.name.length() +
+					staticDispatchExpr.name;
+				// TODO
+
+				String actualsStr = caller;
+				for(int i = 0; i < actuals.size(); i++) {
+					actualsStr += ", " + actuals.get(i);
+				}
+				out.println("\t%" + registerCounter.incrementIndex() + " = call "
+					+ CoolUtils.parseType(staticDispatchExpr.type) + " "
+					+ funcName + "(" + actualsStr + ")");
+				return CoolUtils.parseType(staticDispatchExpr.type) + " %" + registerCounter.getIndex();
+			} else {
+				System.out.println("expression type was not expected");
+				System.out.println(expr.type);
+			}
+		}
+	}
+
+	// deprecated
 	private void handleClassMethod(IRClass IRClass, HashMap<String, AST.formal> formalMap, AST.expression expr,
 			PrintWriter out, boolean lastExpr) {
 		// assignment expression

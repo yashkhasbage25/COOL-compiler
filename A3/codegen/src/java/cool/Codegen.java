@@ -804,7 +804,18 @@ public class Codegen {
 					}
 				}
 
-				// TODO
+				if(!formalsMap.containsKey(assignExpr.name)) {
+					out.println("\tstore " + e1 + ", " + type + "* %" + assignExpr.name
+						+ ".addr, align 4");
+					return e1;
+				} else {
+					out.println("\t%"+ registerCounter.incrementIndex()
+						+ " = getelementptr inbounds " + stype + ", " + stype
+						+ "* %self, i32 0, i32 " + classInfo.attrIndex.get(assignExpr.name));
+					out.println("\tstore " + e1 + ", " + type + "* %"
+						+ registerCounter.getIndex() + ", align 4");
+					return e1;
+				}
 			} else if(expr instanceof AST.block) {
 				AST.block blockExpr = (AST.block) expr;
 				String register = "";
@@ -851,46 +862,48 @@ public class Codegen {
 					+ CoolUtils.parseType(condExpr.type) + " [" + ifBody + ", %"
 					+ ifBodyLabel + "], [" + elseBody + ", %" + elseBodyLabel + "]");
 				return CoolUtils.parseType(condExpr.type) + " %" + registerCounter.getIndex();
-			} else if(expr instanceof AST.static_dispatch) {
-				AST.static_dispatch staticDispatchExpr = (AST.static_dispatch) expr;
-				String caller = handleExpr(classInfo, condExpr.caller, formalsMap, blocks, out);
-				List<String> actuals = new ArrayList<>();
-				for(AST.expression actual: staticDispatchExpr.actuals) {
-					String a = handleExpr(classInfo, actual, formalsMap, blocks, out);
-					actuals.add(a);
-				}
-
-				ifCounter.incrementIndex();
-				out.println("\t%" + registerCounter.incrementIndex() + " = icmp eq "
-					+ caller + ", null");
-				out.println("\tbr i1 %" + registerCounter.getIndex() + ", label %if.then"
-					+ ifCounter.getIndex() + ", label %if.else" + ifCounter.getIndex());
-				out.println("if.then" + ifCounter.getIndex() + ":");
-				blocks.add("if.then" + ifCounter.getIndex());
-				out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [25 x i8]* @Abortdisvoid to [1024 x i8]*");
-				out.println("\t%" + registerCounter.incrementIndex()
-					+ " = call %class.IO* @_CN2IO_FN9out_string(%class.IO* null, [1024 x i8]* %"
-					+ registerCounter.prevIndex() + ")");
-				out.println("\tcall void @exit(i32 1)");
-				out.println("\tbr label %if.else" + ifCount.getIndex());
-
-				out.println("if.else" + ifCounter.getIndex() + ":");
-				blocks.add("if.else" + ifCounter.getIndex());
-
-				String funcName = "@_CN" + staticDispatchExpr.typeid.length() +
-					staticDispatchExpr.typeid + staticDispatchExpr.name.length() +
-					staticDispatchExpr.name;
-				// TODO
-
-				String actualsStr = caller;
-				for(int i = 0; i < actuals.size(); i++) {
-					actualsStr += ", " + actuals.get(i);
-				}
-				out.println("\t%" + registerCounter.incrementIndex() + " = call "
-					+ CoolUtils.parseType(staticDispatchExpr.type) + " "
-					+ funcName + "(" + actualsStr + ")");
-				return CoolUtils.parseType(staticDispatchExpr.type) + " %" + registerCounter.getIndex();
-			} else {
+			}
+			// else if(expr instanceof AST.static_dispatch) {
+			// 	AST.static_dispatch staticDispatchExpr = (AST.static_dispatch) expr;
+			// 	String caller = handleExpr(classInfo, condExpr.caller, formalsMap, blocks, out);
+			// 	List<String> actuals = new ArrayList<>();
+			// 	for(AST.expression actual: staticDispatchExpr.actuals) {
+			// 		String a = handleExpr(classInfo, actual, formalsMap, blocks, out);
+			// 		actuals.add(a);
+			// 	}
+			//
+			// 	ifCounter.incrementIndex();
+			// 	out.println("\t%" + registerCounter.incrementIndex() + " = icmp eq "
+			// 		+ caller + ", null");
+			// 	out.println("\tbr i1 %" + registerCounter.getIndex() + ", label %if.then"
+			// 		+ ifCounter.getIndex() + ", label %if.else" + ifCounter.getIndex());
+			// 	out.println("if.then" + ifCounter.getIndex() + ":");
+			// 	blocks.add("if.then" + ifCounter.getIndex());
+			// 	out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [25 x i8]* @Abortdisvoid to [1024 x i8]*");
+			// 	out.println("\t%" + registerCounter.incrementIndex()
+			// 		+ " = call %class.IO* @_CN2IO_FN9out_string(%class.IO* null, [1024 x i8]* %"
+			// 		+ registerCounter.prevIndex() + ")");
+			// 	out.println("\tcall void @exit(i32 1)");
+			// 	out.println("\tbr label %if.else" + ifCount.getIndex());
+			//
+			// 	out.println("if.else" + ifCounter.getIndex() + ":");
+			// 	blocks.add("if.else" + ifCounter.getIndex());
+			//
+			// 	String funcName = "@_CN" + staticDispatchExpr.typeid.length() +
+			// 		staticDispatchExpr.typeid + staticDispatchExpr.name.length() +
+			// 		staticDispatchExpr.name;
+			// 	// TODO
+			//
+			// 	String actualsStr = caller;
+			// 	for(int i = 0; i < actuals.size(); i++) {
+			// 		actualsStr += ", " + actuals.get(i);
+			// 	}
+			// 	out.println("\t%" + registerCounter.incrementIndex() + " = call "
+			// 		+ CoolUtils.parseType(staticDispatchExpr.type) + " "
+			// 		+ funcName + "(" + actualsStr + ")");
+			// 	return CoolUtils.parseType(staticDispatchExpr.type) + " %" + registerCounter.getIndex();
+			// }
+			 else {
 				System.out.println("expression type was not expected");
 				System.out.println(expr.type);
 			}

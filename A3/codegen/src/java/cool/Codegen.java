@@ -298,6 +298,7 @@ public class Codegen {
 					// handleClassMethod(nameToIrclassMap.get(s), null, exp, out, false);
 					// handleExpr(nameToIrclassMap.get(s), null, exp, new ArrayList<>(), out);
 					// irclassinfo, formalsList, expr, changedFormals, blocks, out
+					// TODO
 					handleExpr(className2IRClassInfoMap.get(className), )
 				} else if (a.typeid.equals("Int")) {
 					AST.assign exp = new AST.assign(a.name, new AST.int_const(0, 0), 0);
@@ -328,39 +329,39 @@ public class Codegen {
 	}
 
 	private void addClassToMap(List<String> dfsOrdering) {
-		for (String s : dfsOrdering) {
-			if (CoolUtils.IsDefaultClass(s))
+		for (String currClassName : dfsOrdering) {
+			if (CoolUtils.IsDefaultClass(currClassName))
 				continue;
 
-			AST.class_ currAstClass = ClassNameMap.get(s);
+			AST.class_ currAstClass = className2ClassMap.get(currClassName);
 			// System.out.println(s + Graph.parentNameMap.get(s));
-			IRClass parentClass = nameToIrclassMap.get(Graph.parentNameMap.get(s));
+			IRClass parentClass = nameToIrclassMap.get(Graph.parentNameMap.get(currClassName));
 			// HashMap<String, AST.attr> curr_alist = parentClass.alist;
-			HashMap<String, AST.attr> curr_alist = new HashMap<String, AST.attr>();
-			HashMap<String, AST.method> curr_mlist = new HashMap<String, AST.method>();
-			curr_alist.putAll(parentClass.alist);
+			HashMap<String, AST.attr> classAttrName2Attr = new HashMap<String, AST.attr>();
+			HashMap<String, AST.method> classMethodName2Method = new HashMap<String, AST.method>();
+			classAttrName2Attr.putAll(parentClass.alist);
 			// curr_mlist.putAll(parentClass.mlist); not needed
-			Int size=0;
-			for (AST.feature feature : currAstClass.features) {
-				if (feature.getClass() == AST.attr.class) {
-					AST.attr attr = (AST.attr) feature;
-					curr_alist.put(attr.name, attr);
-					if (attr.typeid == 'Int' || attr.typeid=='Bool')
-						size+=4;
+			Int size = 0;
+			for (AST.feature classFeature : currAstClass.features) {
+				if (classFeature.getClass() == AST.attr.class) {
+					AST.attr classAttr = (AST.attr) classFeature;
+					classAttrName2Attr.put(attr.name, classAttr);
+					if (classAttr.typeid == 'Int' || classAttr.typeid=='Bool')
+						size += 4;
 					else
-						size+=8;
+						size += 8;
 				}
 			}
 
-			for (AST.feature feature : currAstClass.features) {
-				if (feature.getClass() == AST.method.class) {
-					AST.method method = (AST.method) feature;
-					curr_mlist.put(method.name, method);
+			for (AST.feature classFeature : currAstClass.features) {
+				if (classFeature.getClass() == AST.method.class) {
+					AST.method classMethod = (AST.method) classFeature;
+					classMethodName2Method.put(classMethod.name, classMethod);
 				}
 			}
 
-			IRClass currClass = new IRClass(currAstClass.name, currAstClass.parent, curr_alist, curr_mlist,size);
-			nameToIrclassMap.put(s, currClass);
+			IRClass currClass = new IRClass(currAstClass.name, currAstClass.parent, classAttrName2Attr, classMethodName2Method);
+			nameToIrclassMap.put(currClassName, currClass);
 		}
 	}
 

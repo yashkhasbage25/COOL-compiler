@@ -276,20 +276,15 @@ public class Codegen {
 			registerCounter.reset();
 			int attrCounter = 0;
 			String formals = CoolUtils.printTypes2(s) + " %this";
-			out.println("define void @" + CoolUtils.getMangledName(className, className) + "("
-				+ formals + " ) {"
-			);
+			out.println("define void @" + CoolUtils.getMangledName(className, className) + "(" + formals + " ) {");
 			String parentName = Graph.parentNameMap.get(s);
 			out.println("entry:");
 			if (parentName != null) {
-				out.println("\t%"+ registerCounter.getIndex() + " = bitcast %class."
-					+ s + "* %this to %class." + parentName + "*"
-				);
+				out.println("\t%" + registerCounter.getIndex() + " = bitcast %class." + s + "* %this to %class."
+						+ parentName + "*");
 				registerCounter.incrementIndex();
-				out.println("\tcall void @" + CoolUtils.getMangledName(parentName, parentName)
-					+ "(%class." + parentName + "* %" + registerCounter.getIndex()
-					+ ")"
-				);
+				out.println("\tcall void @" + CoolUtils.getMangledName(parentName, parentName) + "(%class." + parentName
+						+ "* %" + registerCounter.getIndex() + ")");
 			}
 			for (AST.attr classAttr : className2IRClassInfoMap.get(className).classAttrs.values()) {
 				if (!(classAttr.value instanceof AST.no_expr)) {
@@ -299,29 +294,29 @@ public class Codegen {
 					// handleExpr(nameToIrclassMap.get(s), null, exp, new ArrayList<>(), out);
 					// irclassinfo, formalsList, expr, changedFormals, blocks, out
 					// TODO
-					handleExpr(className2IRClassInfoMap.get(className), )
+					handleExpr(className2IRClassInfoMap.get(className), null, exp, new ArrayList<>(), blocks, out);
 				} else if (a.typeid.equals("Int")) {
 					AST.assign exp = new AST.assign(a.name, new AST.int_const(0, 0), 0);
 					exp.type = "Int";
 					// handleClassMethod(nameToIrclassMap.get(s), null, exp, out, false);
-					handleExpr(nameToIrclassMap.get(s), null, exp, new ArrayList<>(), out);
+					handleExpr(className2IRClassInfoMap.get(className), null, exp, new ArrayList<>(), blocks, out);
 				} else if (a.typeid.equals("Bool")) {
 					AST.assign exp = new AST.assign(a.name, new AST.bool_const(false, 0), 0);
 					exp.type = "Bool";
 					// handleClassMethod(nameToIrclassMap.get(s), null, exp, out, false);
-					handleExpr(nameToIrclassMap.get(s), null, exp, new ArrayList<>(), out);
+					handleExpr(className2IRClassInfoMap.get(className), null, exp, new ArrayList<>(), blocks, out);
 				} else if (a.typeid.equals("String")) {
 					AST.assign exp = new AST.assign(a.name, new AST.string_const("", 0), 0);
 					exp.type = "String";
 					// handleClassMethod(nameToIrclassMap.get(s), null, exp, out, false);
-					handleExpr(nameToIrclassMap.get(s), null, exp, new ArrayList<>(), out);
+					handleExpr(className2IRClassInfoMap.get(className), null, exp, new ArrayList<>(), blocks, out);
 				} else {
 					String ctype = CoolUtils.printTypes(s);
 					registerCounter.incrementIndex();
 					out.println("\t%" + registerCount.getIndex() + " = getelementptr inbounds " + ctype + "," + ctype
 							+ "* %this, i32 0, i32 " + attrCounter);
-					out.println("\tstore " + CoolUtils.printTypes2(a.typeid) + " null, " + CoolUtils.printTypes(a.typeid)
-							+ "* %" + registerCounter.getIndex() + ", align 4");
+					out.println("\tstore " + CoolUtils.printTypes2(a.typeid) + " null, "
+							+ CoolUtils.printTypes(a.typeid) + "* %" + registerCounter.getIndex() + ", align 4");
 				}
 			}
 			out.println("ret void\n}");
@@ -680,7 +675,7 @@ public class Codegen {
 			return "i32 " + intExpr.value;
 		} else if(expr instanceof AST.object) {
 			AST.object objectExpr = (AST.object) expr;
-			if((classInfo.classAttrs.contains == -1) || (formalsMap.containsKey(objectExpr))) {
+			if((!classInfo.classAttrs.contains(objectExpr.name)) || (formalsMap.containsKey(objectExpr.name))) {
 				if(! formalsMap.containsKey(objectExpr)) {
 					return CoolUtils.parseType(objectExpr.type) + " %" + objectExpr.name;
 				} else {
@@ -690,8 +685,6 @@ public class Codegen {
 					return ty + " %" + registerCounter.getIndex();
 				}
 				String parseTypeName = CoolUtils.parseType(classInfo.name);
-				parseTypeName = parseTypeName.substring(0, parseTypeName.length() - 1);
-				// TODO
 				out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds "
 					+ parseTypeName + ", " + parseTypeName + "* %self, i32 0, i32 " + classInfo.classAttrs.indexOf(objectExpr.name));
 				out.println("\t%" + registerCounter.incrementIndex() + " = load "

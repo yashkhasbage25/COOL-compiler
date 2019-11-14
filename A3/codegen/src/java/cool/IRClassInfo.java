@@ -3,7 +3,7 @@ package cool;
 import java.util.*;
 
 public class IRClassInfo {
-	public Int size;
+	public int size;
 	public String name;
 	public String parent;
 	public HashMap<String, AST.attr> classAttrs;
@@ -23,7 +23,7 @@ public class IRClassInfo {
 		// mlist.putAll(ml);
 
 		attrIndex = new HashMap<String, Integer>();
-		int index = 0;
+		int index = 1;
 		if(this.classAttrs.size() > 0) {
 			for(Map.Entry<String, AST.attr> entry: this.classAttrs.entrySet()) {
 				this.attrIndex.put(entry.getKey(), index++);

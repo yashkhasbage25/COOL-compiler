@@ -1,8 +1,8 @@
 package cool;
 
-class Counter {
+public class Counter {
 
-    int index = 0;
+    private int index = -1;
 
     public Counter() {
     }
@@ -42,6 +42,6 @@ class Counter {
     }
 
     public void reset() {
-        index = 0;
+        index = -1;
     }
 }

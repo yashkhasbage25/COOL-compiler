@@ -1,8 +1,9 @@
 class Main inherits IO {
+	io : IO <- new IO;
 	main() : Int {{
-		self@IO.out_string("Hello world!\n");
-		self@IO.out_string(self@Object.type_name());
-		self@IO.out_string("\n");
+		io@IO.out_string("Hello world!\n");
+		io@IO.out_string(io@Object.type_name());
+		io@IO.out_string("\n");
 		2;
 	}};
 };

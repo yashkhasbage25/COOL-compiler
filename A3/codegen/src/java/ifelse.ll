@@ -1,7 +1,7 @@
 target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-unknown-linux-gnu"
 define void @_CN6Object_FN6Object_(%class.Object* %this) {
-entry:
+entry:	
 ret void
 }
 define void @_CN2IO_FN2IO_(%class.IO* %this) {
@@ -38,14 +38,14 @@ declare i8* @strncpy(i8*, i8*, i32)
 %class.String = type {	%class.Object}
 %class.Bool = type {	%class.Object}
 %class.IO = type {	%class.Object}
-%class.Main = type {	%class.IO ,%class.IO*}
+%class.Main = type {	%class.Object ,%class.IO* ,i32}
 define %class.Object* @_CN6Object_FN5abort_( %class.Object* %this ) noreturn {
 entry:
 	call void @exit( i32 1 )
 	ret %class.Object* null
 }
 
-define i8* @_CN6Object_FN9type_name_(%class.Object* %this) {
+define i8* @_CN6Object_FN9type_name(%class.Object* %this) {
 	entry:
 	%0 = getelementptr inbounds %class.Object, %class.Object* %this, i32 0, i32 0
 	%1 = load i8*, i8** %0, align 8
@@ -90,9 +90,9 @@ entry:
 	ret [1024 x i8]* %retval
 }
 
-define %class.IO* @_CN2IO_FN10out_string_( %class.IO* %this, i8* %str ) {
+define %class.IO* @_CN2IO_FN10out_string_( %class.IO* %this, [1024 x i8]* %str ) {
 entry:
-	%0 = call i32 (i8*, ...) @printf( i8* bitcast ( [3 x i8]* @strformatstr to i8* ), i8* %str )
+	%0 = call i32 (i8*, ...) @printf( i8* bitcast ( [3 x i8]* @strformatstr to i8* ), [1024 x i8]* %str )
 	ret %class.IO* %this
 }
 
@@ -119,78 +119,48 @@ entry:
 	ret i32 %retval
 }
 
-define i32 @_CN4Main_FN4main_(%class.Main* %this ){
+define %class.IO* @_CN4Main_FN4main_(%class.Main* %this ){
 entry:
-	%0 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
-	%1 = load %class.IO*, %class.IO** %0, align 4
-	%2 = bitcast [14 x i8]* @.str0 to i8*
-	%3 = icmp eq %class.IO* %1, null
-	br i1 %3, label %if.then0, label %if.else0
+	%0 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 2
+	%1 = load i32, i32* %0, align 4
+	%2 = icmp eq i32 %1, 1
+	br i1 %2, label %if.then0, label %if.else0
 if.then0:
-	%4 = bitcast [25 x i8]* @Abortdisvoid to i8*
-	%5 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* null, i8* %4)
-	call void @exit(i32 1)
-	br label %if.else0
+	br label %if.end0
 if.else0:
-	%6 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* %1, i8* %2)
-	%7 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
-	%8 = load %class.IO*, %class.IO** %7, align 4
-	%9 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
-	%10 = load %class.IO*, %class.IO** %9, align 4
-	%11 = icmp eq %class.IO* %10, null
-	br i1 %11, label %if.then1, label %if.else1
+	%3 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 2
+	%4 = load i32, i32* %3, align 4
+	%5 = icmp eq i32 %4, 2
+	br i1 %5, label %if.then1, label %if.else1
 if.then1:
-	%12 = bitcast [25 x i8]* @Abortdisvoid to i8*
-	%13 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* null, i8* %12)
-	call void @exit(i32 1)
-	br label %if.else1
+	br label %if.end1
 if.else1:
-	%14 = getelementptr inbounds %class.IO, %class.IO* %10, i32 0, i32 0
-	%15 = call i8* @_CN6Object_FN9type_name_(%class.Object* %14)
-	%16 = icmp eq %class.IO* %8, null
-	br i1 %16, label %if.then2, label %if.else2
-if.then2:
-	%17 = bitcast [25 x i8]* @Abortdisvoid to i8*
-	%18 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* null, i8* %17)
-	call void @exit(i32 1)
-	br label %if.else2
-if.else2:
-	%19 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* %8, i8* %15)
-	%20 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
-	%21 = load %class.IO*, %class.IO** %20, align 4
-	%22 = bitcast [2 x i8]* @.str1 to i8*
-	%23 = icmp eq %class.IO* %21, null
-	br i1 %23, label %if.then3, label %if.else3
-if.then3:
-	%24 = bitcast [25 x i8]* @Abortdisvoid to i8*
-	%25 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* null, i8* %24)
-	call void @exit(i32 1)
-	br label %if.else3
-if.else3:
-	%26 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* %21, i8* %22)
-	ret i32 2
+	br label %if.end1
+if.end1:
+	%6 = phi %class.IO* [, %if.then1], [, %if.else1]
+	br label %if.end0
+if.end0:
+	%7 = phi %class.IO* [, %if.then0], [%6, %if.end1]
+	ret %class.IO* %7
 }
 
 define void @_CN4Main_FN4Main_(%class.Main* %this ) {
 entry:
-	%0 = bitcast %class.Main* %this to %class.IO*
-	call void @_CN2IO_FN2IO_(%class.IO* %0)
-	%1 = call noalias i8* @malloc(i64 8)
+	%0 = bitcast %class.Main* %this to %class.Object*
+	call void @_CN6Object_FN6Object_(%class.Object* %0)
+	%1 = call noalias i8* @malloc(i64 16)
 	%2 = bitcast i8* %1 to %class.IO*
 	call void @_CN2IO_FN2IO_(%class.IO*%2)
 	%3 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
 	store %class.IO* %2, %class.IO** %3, align 4
+	%4 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 2
+	store i32 0, i32* %4, align 4
 ret void
 }
 define i32 @main() {
 entry:
 	%main = alloca %class.Main, align 8
 	call void @_CN4Main_FN4Main_(%class.Main* %main)
-	%retval = call i32 @_CN4Main_FN4main_(%class.Main* %main)
+	%retval = call %class.IO* @_CN4Main_FN4main_(%class.Main* %main)
 	ret i32 0
 }
-@.str0 = private unnamed_addr constant [14 x i8] c"Hello world!
-\00", align 1
-
-@.str1 = private unnamed_addr constant [2 x i8] c"
-\00", align 1

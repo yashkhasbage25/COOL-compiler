@@ -1,346 +1,540 @@
 package cool;
 
-import java.util.*;
-import cool.CoolUtils;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Vector;
+
 import cool.AST.class_;
-import cool.TypeChecker;
 
-public class Semantic {
+
+public class Semantic{
 	private boolean errorFlag = false;
-
-	public void reportError(String filename, int lineNo, String error) {
+	public void reportError(String filename, int lineNo, String error){
 		errorFlag = true;
-		System.err.println(filename + ":" + lineNo + ": " + error);
+		System.err.println(filename+":"+lineNo+": "+error);
 	}
-
-	public boolean getErrorFlag() {
+	public boolean getErrorFlag(){
 		return errorFlag;
 	}
 
-	/*
-	 * Don't change code above this line
-	 */
+/*
+	Don't change code above this line
+*/
 
 	ScopeTable<AST.attr> scopeTable = new ScopeTable<AST.attr>();
-	ClassInfo classInfo = new ClassInfo();
-	static boolean typeCheckErrorFlag = false;
-
-	// the actual semantic analyzer
-	public Semantic(AST.program program) {
-
-		// initialize objects of classinfo
-		classInfo.createNewAttrInfo();
-		classInfo.createNewMethodInfo();
-		classInfo.fillDefaultClasses();
-
-		// collect all class names. traverse through all classes. collect all
-		// attributes, and all other information
-		// this also includes creating inheritance graph
-		collectAndValidateClasses(program);
-		// now check for cycles in inheritance graph
-		runCycleReporter(program);
-		// check for undefined parent for all classes
-		checkForUndefinedParent(program);
-		// analyze features of classes. find any error in definition, error in
-		// repeated argument-names
-		analyzeClassFeatures(program);
-		// run the actual type checker
-		recurseTypeChecker(program);
-		// see if there was some error
-		errorFlag = errorFlag || typeCheckErrorFlag;
-	}
-
-	// this runs cycle checker and reports cycle
-	private void runCycleReporter(AST.program program) {
-		Set<String> nodes = new HashSet<String>();
-		nodes = classInfo.Graph.cyclePresent();
-		boolean flag = (nodes.size() != 0);
-		errorFlag = errorFlag || flag;
-		if (flag) {
-			for (String k : nodes)
-				reportError(program.classes.get(0).filename, 0,
-						"Class " + k + " ,or an ancestor of " + k + " is involved in an inheritance cycle.");
-			System.exit(1); // we will have to exit otherwise it would run into infinite loop while taking
-							// parents succesively
+	ClassTable classTable = new ClassTable();
+	String filename;
+	
+	public Semantic(AST.program program){
+		//Write Semantic analyzer code here
+		
+		processGraph(program.classes);
+		List<Error> errors = classTable.getErrors();	// ClassTable cannot access reportError method (its not static). Thus, errors are returned in a list (from classTable) and printed.
+		for(Error e : errors) {
+			reportError(e.fname, e.line, e.err);
 		}
+		
+		for(AST.class_ e : program.classes) {
+			filename = e.filename;				// filename for each class	
+			scopeTable.enterScope();			// enter new scope for a class
+			scopeTable.insert("self", new AST.attr("self", e.name, new AST.no_expr(e.lineNo), e.lineNo));		// self is available as attribute within the class
+			scopeTable.insertAll(classTable.getAttrs(e.name));		// insert all inherited and other declared attributes within the class into the scope
+			processNode(e);
+			
+			scopeTable.exitScope();				
+		}
+		
+		
+		ClassPlus main_class = classTable.getClassPlus("Main");
+		if(main_class == null)
+			reportError(filename, 1, "Program does not contain class 'Main'");
+		else if(main_class.mlist.containsKey("main") == false)
+			reportError(filename, 1, "'Main' class does not contain 'main' method");
+		
+		
 	}
+	
+	private void processGraph(List <AST.class_> classes) {
+		
+		Integer sz = 0;		// stores the number of classes
+		HashMap <String, AST.class_> idxCont = new HashMap <String, AST.class_> ();
+		HashMap <String, Integer> classIdx = new HashMap <String, Integer> ();
+		HashMap <Integer, String> idxName = new HashMap <Integer, String>();
+		ArrayList < ArrayList <Integer> > classGraph = new ArrayList < ArrayList <Integer> >();
+		
+		List <String> no_redef = Arrays.asList("Object", "String", "Int", "Bool", "IO");
+		List <String> no_inherit = Arrays.asList("String", "Int", "Bool");
 
-	// this calls further steps in collecting and validating classes
-	// traverse through all classes. collect all information.
-	private void collectAndValidateClasses(AST.program program) {
-		for (class_ programClass : program.classes) {
-			String parentClassName = programClass.parent;
-			String programClassName = programClass.name;
-			// default class cannot be redefined
-			if (!isDefaultClassRedifined(programClass)) {
-				// check if class inheritance is not poosible
-				if (!classInheritanceNotPossible(programClass)) {
-					// if the above two checks are passed then class can
-					// be passed on further analysis
-					// problematic classes are not at all passed for further
-					// analysis
-					classInfo.ClassNameMap.put(programClass.name, programClass);
-					classInfo.Graph.addEdge(parentClassName, programClassName);
-				}
+		
+		classIdx.put("Object", 0);
+		idxName.put(0, "Object");
+		classIdx.put("IO", 1);
+		idxName.put(0, "IO");
+		
+		classGraph.add(new ArrayList <Integer> (Arrays.asList(1)));
+		classGraph.add(new ArrayList <Integer>());	// for IO
+		
+		sz = sz + 2;	// IO and Object (2 classes) already present
+		
+		/* Checking for :
+		 * - bad redefinitions
+		 * - bad inheritance
+		 * Also : assigning an integer corresponding to each class.
+		 */
+		for(AST.class_ e : classes) {
+			if(no_redef.contains(e.name)) {
+				reportError(e.filename, e.lineNo, "Cannot redefine class : " + e.name);
+				System.exit(1);
+			}
+			else if(no_inherit.contains(e.parent)) {
+				reportError(e.filename, e.lineNo, "Class cannot inherit : " + e.parent);
+				System.exit(1);
+			}
+			else if(classIdx.containsKey(e.name) == false) {
+				idxName.put(sz, e.name);			// Reverse lookup. Integer -> className
+				classIdx.put(e.name, sz++);			// className -> Integer
+				idxCont.put(e.name, e);				// getting the class from name. Used later.
+				classGraph.add(new ArrayList <Integer> ());
 			}
 		}
-	}
-
-	private boolean isDefaultClassRedifined(class_ programClass) {
-		Boolean isRedifined = false;
-		String programClassName = programClass.name;
-
-		// these cannot be inherited
-		if (programClassName.equals(CoolUtils.OBJECT_TYPE_STR)) {
-			reportError(programClass.filename, programClass.lineNo, "Redefinition of Object class.");
-			errorFlag = true;
-			isRedifined = true;
-		} else if (programClassName.equals(CoolUtils.INT_TYPE_STR)) {
-			reportError(programClass.filename, programClass.lineNo, "Redefinition of Int class.");
-			errorFlag = true;
-			isRedifined = true;
-		} else if (programClassName.equals(CoolUtils.STRING_TYPE_STR)) {
-			reportError(programClass.filename, programClass.lineNo, "Redefinition of String class.");
-			errorFlag = true;
-			isRedifined = true;
-		} else if (programClassName.equals(CoolUtils.BOOL_TYPE_STR)) {
-			reportError(programClass.filename, programClass.lineNo, "Redefinition of Bool class.");
-			errorFlag = true;
-			isRedifined = true;
-		} else if (programClassName.equals(CoolUtils.IO_TYPE_STR)) {
-			reportError(programClass.filename, programClass.lineNo, "Redefinition of IO class.");
-			errorFlag = true;
-			isRedifined = true;
-		}
-		return isRedifined;
-	}
-
-	// check if the class inheritance attempted is not allowed
-	// string, cool and int cannot be inherited
-	private boolean classInheritanceNotPossible(class_ programClass) {
-		Boolean notPossible = false;
-		String parentClassName = programClass.parent;
-		if (parentClassName.equals(CoolUtils.INT_TYPE_STR) || parentClassName.equals(CoolUtils.STRING_TYPE_STR)
-				|| parentClassName.equals(CoolUtils.BOOL_TYPE_STR)) {
-			reportError(programClass.filename, programClass.lineNo, "Class " + parentClassName
-					+ " can never be inherited. Attempt to inherit by class " + programClass.name);
-			errorFlag = true;
-			notPossible = true;
-		}
-		return notPossible;
-	}
-
-	// check if the parent is not defined in a class inheritance
-	private boolean checkForUndefinedParent(AST.program program) {
-		for (class_ programClass : program.classes) {
-			String parentClassName = programClass.parent;
-			if (classInfo.ClassNameMap.get(parentClassName) == null) {
-				reportError(programClass.filename, programClass.lineNo,
-						"Inheritance unsuccessful: " + programClass.name + " could not inherit " + parentClassName
-								+ " because " + parentClassName + " was not defined.");
-				errorFlag = true;
+		
+		/* We are creating an undirected graph in this method.
+		 * Also: Checking for - undefined parent class error
+		 */
+		for(AST.class_ e : classes) {
+			if(classIdx.containsKey(e.parent) == false) {
+				reportError(e.filename, e.lineNo, "Parent class not found : " + e.parent);
+				System.exit(1);
 			}
+			int u = classIdx.get(e.parent);
+			int v = classIdx.get(e.name);
+			classGraph.get(u).add(v);			// adding an edge from parent -> child in the graph
 		}
-		return errorFlag;
-	}
-
-	// analyze class featrues
-	private boolean analyzeClassFeatures(AST.program program) {
-		Set<String> classesFoundSet = new HashSet<String>();
-		boolean foundMain = false;
-		boolean foundmain = false;
-		boolean mainHasArgs = false;
-
-		// check for existence of Main class
-		for (class_ programClass : program.classes) {
-			if (programClass.name.equals(CoolUtils.MAIN_TYPE_STR)) {
-				foundMain = true;
-			}
-
-			// check for class redefinition
-			if (classesFoundSet.contains(programClass.name)) {
-				reportError(programClass.filename, programClass.lineNo,
-						"Classes cannot be redefined. Class " + programClass.name + " was attempted to be redefined.");
-				errorFlag = true;
-			} else {
-				classesFoundSet.add(programClass.name);
-			}
-
-			Map<String, List<String>> classMethodName2Args = new HashMap<String, List<String>>();
-			Map<String, String> classAttrName2Type = new HashMap<String, String>();
-			// analyze class features
-			for (AST.feature classFeature : programClass.features) {
-				if (classFeature instanceof AST.method) {
-					AST.method classMethod = (AST.method) classFeature;
-					// check for method redefinition
-					if (classMethodName2Args.containsKey(classMethod.name)) {
-						reportError(programClass.filename, classFeature.lineNo,
-								"Method " + classMethod.name + " is redefined.");
-						errorFlag = true;
-					} else {
-						List<String> argTypeList = new ArrayList<String>();
-						Set<String> argFormalNames = new HashSet<String>();
-						for (AST.formal arg : classMethod.formals) {
-							if (argFormalNames.contains(arg.name)) {
-								// check if a variable name was repeated in
-								// formal arguments
-								reportError(programClass.filename, classFeature.lineNo,
-										"Formal argument " + arg.name + " was reused in definition of "
-												+ classMethod.name + " in class " + programClass.name);
-								errorFlag = true;
-							} else {
-								argFormalNames.add(arg.name);
-								// if the formalparameters pass the above
-								// checks then it can be passed on to
-								// method details for further semantic
-								// checks
-								argTypeList.add(arg.typeid);
-
-							}
+		
+		boolean cycles = false;
+		Boolean[] visited = new Boolean[sz + 10];
+		Arrays.fill(visited, Boolean.FALSE);
+		Queue<Integer> q = new LinkedList<Integer>(); q.offer(0);
+		
+		while (!q.isEmpty()) {
+			int u = q.poll();
+			if(visited[u] == false)
+				visited[u] = true;
+			else {
+				reportError(idxCont.get(idxName.get(u)).filename, 1, "Class " +  idxName.get(u) + ", or an ancestor of " + idxName.get(u) + ", is involved in an inheritance cycle.");
+				cycles = true;		// `cycles` is set to true if cycles are found
+				if(q.isEmpty()) {
+					for(int i = 0; i < sz; ++i)
+						if(visited[i] == false) {
+							q.offer(i);
+							break;
 						}
-						// if the method passes all the above checks
-						// then it can be passed on for further
-						// semantic checks
-						argTypeList.add(classMethod.typeid);
-
-						// check for main class and main method in main class
-						classMethodName2Args.put(classMethod.name, argTypeList);
-						if (programClass.name.equals(CoolUtils.MAIN_TYPE_STR)) {
-							foundMain = true;
-							if (classMethod.name.equals(CoolUtils.MAIN_FN_STR)) {
-								foundmain = true;
-								mainHasArgs = (argTypeList.size() == 1);
-							}
-						}
-					}
-				} else if (classFeature instanceof AST.attr) {
-					AST.attr classAttr = (AST.attr) classFeature;
-					// check for attribute redefinition
-					if (classAttrName2Type.containsKey(classAttr.name)) {
-						reportError(programClass.filename, classFeature.lineNo,
-								"Attribute " + classAttr.name.toString() + " is redefined.");
-						errorFlag = true;
-						// check if the inherited attrbute is redefined
-					} else if (isAttrInherited(classAttr, programClass, classInfo)) {
-						reportError(programClass.filename, classFeature.lineNo,
-								"Attribute " + classAttr.name.toString() + " was inherited but still redefined.");
-						errorFlag = true;
-					} else {
-						// if the above two checks are passed by class attribute
-						// then attribute can be passed for further analysis
-						classAttrName2Type.put(classAttr.name, classAttr.typeid);
-					}
-				} else {
-					// a class featrue can only be either a method or attribute
-					reportError(programClass.filename, programClass.lineNo, "Reached a forbidden line.");
-					errorFlag = true;
 				}
+				continue;
 			}
-			String className = programClass.name;
-			// System.out.println("225 " + classMethodName2Args);
-			classInfo.methodInfo.insert(className, classMethodName2Args);
-			classInfo.attrInfo.insert(className, classAttrName2Type);
+			for(Integer v : classGraph.get(u)) {
+				q.offer(v);
+			}
+			if(q.isEmpty()) {
+				for(int i = 0; i < sz; ++i)
+					if(visited[i] == false) {
+						q.offer(i);
+						break;
+					}
+			}
 		}
-		// check for compatibility of method defintion of overridden methods
-		// check if the method redefinition is wronly definied
-		errorFlag |= (!checkMethodInheritanceCompat(program));
-		// analyze main class
-		return analyzeMainClass(foundMain, foundmain, mainHasArgs, classInfo);
+		
+		if(cycles) System.exit(1);		// exit if cycles found
+				
+		q.clear(); q.offer(0);
+		
+		while (!q.isEmpty()) {
+			int u = q.poll();
+			if(u != 1 && u != 0) {
+				classTable.insert(idxCont.get(idxName.get(u)));		// insert classes in BFS-order so that methods and attributes can be inherited.
+			}
+			for(Integer v : classGraph.get(u)) {
+				q.offer(v);
+			}
+		}
 	}
+	
+	private void processNode(AST.class_ class_) {
+		/* The method checks if the features are
+		 * attr or method. Corresponding overloaded
+		 * function is called.
+		 */
+		for(AST.feature e : class_.features) {
+			if(e.getClass() == AST.method.class) {
+				processNode((AST.method)e);
+			}
+			else if(e.getClass() == AST.attr.class) {
+				processNode((AST.attr)e);
+			}
+		}
+	}
+	
+	private void processNode(AST.method method) {
+		AST.attr a_self = scopeTable.lookUpLocal("self");	// getting the self (class) object to get class name.
+		
+		scopeTable.enterScope();
+		
+		for(AST.formal e : method.formals) {
+			AST.feature f = scopeTable.lookUpLocal(e.name);
+			/* Error:
+			 * repeat formal parameters : Example func(x : Int, y : Bool, x : String) : Object { ... }// x is multiply defined
+			 */
+			if(f != null && f.getClass() == AST.attr.class) {
+				AST.attr a_f = (AST.attr) f;
+				reportError(filename, a_f.lineNo, "Formal parameter " + a_f.name + " is multiply defined.");
+			}
+			scopeTable.insert(e.name, new AST.attr(e.name, e.typeid, new AST.no_expr(e.lineNo), e.lineNo));
+		}
+		processNode(method.body);
+		// if return type conforms to the method type, then hurray
+		if(classTable.conforms(method.body.type, method.typeid) == false) {
+			reportError(filename, method.body.lineNo, "Inferred return type " + method.body.type + 
+					" of method " + method.name + " does not conform to declared return type " + method.typeid);
+		}
+		scopeTable.exitScope();
+	}
+	
+	private void processNode(AST.attr attr) {
+		AST.attr a_self = scopeTable.lookUpLocal("self");	// getting the self (class) object to get class name.
+		
+		if(attr.value.getClass() != AST.no_expr.class) {
+			processNode(attr.value);
+			// if return type conforms to the method type, then hurray
+			if(classTable.conforms(attr.value.type, attr.typeid) == false) {
+				reportError(filename, attr.value.lineNo, "Inferred type " + attr.value.type + " of initialization of attribute "
+						+ attr.name + " does not conform to declared type " + attr.typeid);
+			}
+		}
+	}
+	
+	private void processNode(AST.expression expr) {
+		if(expr.getClass() == AST.assign.class)
+			processNode((AST.assign)expr);
+		else if(expr.getClass() == AST.static_dispatch.class)
+			processNode((AST.static_dispatch)expr);
+		else if(expr.getClass() == AST.dispatch.class)
+			processNode((AST.dispatch)expr);
+		else if(expr.getClass() == AST.cond.class)
+			processNode((AST.cond)expr);
+		else if(expr.getClass() == AST.loop.class)
+			processNode((AST.loop)expr);
+		else if(expr.getClass() == AST.block.class)
+			processNode((AST.block)expr);
+		else if(expr.getClass() == AST.let.class)
+			processNode((AST.let)expr);
+		else if(expr.getClass() == AST.typcase.class)
+			processNode((AST.typcase)expr);
+		else if(expr.getClass() == AST.new_.class)
+			processNode((AST.new_)expr);
+		else if(expr.getClass() == AST.isvoid.class)
+			processNode((AST.isvoid)expr);
+		else if(expr.getClass() == AST.plus.class)
+			processNode((AST.plus)expr);
+		else if(expr.getClass() == AST.sub.class)
+			processNode((AST.sub)expr);
+		else if(expr.getClass() == AST.mul.class)
+			processNode((AST.mul)expr);
+		else if(expr.getClass() == AST.divide.class)
+			processNode((AST.divide)expr);
+		else if(expr.getClass() == AST.comp.class)
+			processNode((AST.comp)expr);
+		else if(expr.getClass() == AST.lt.class)
+			processNode((AST.lt)expr);
+		else if(expr.getClass() == AST.leq.class)
+			processNode((AST.leq)expr);
+		else if(expr.getClass() == AST.eq.class)
+			processNode((AST.eq)expr);
+		else if(expr.getClass() == AST.neg.class)
+			processNode((AST.neg)expr);
+		else if(expr.getClass() == AST.object.class)
+			processNode((AST.object)expr);
+		else if(expr.getClass() == AST.int_const.class)
+			processNode((AST.int_const)expr);
+		else if(expr.getClass() == AST.string_const.class)
+			processNode((AST.string_const)expr);
+		else if(expr.getClass() == AST.bool_const.class)
+			processNode((AST.bool_const)expr);
+	}
+	
+	private void processNode(AST.assign assign) {
+		processNode(assign.e1);
+		AST.attr a = scopeTable.lookUpGlobal(assign.name);
+		/* Errors:
+		 * - Variable has not been declared
+		 * - Type of expression being assigned to the variable does not conform to the type of the variable
+		 */
+		if(a == null)
+			reportError(filename, assign.lineNo, "Assignment to undeclared variable " + assign.name);
+		else if(classTable.conforms(assign.e1.type, a.typeid) == false)
+			reportError(filename, assign.lineNo, "Type " + assign.e1.type + " of assigned expression does not conform to declared type "
+					+ a.typeid + " of identifier " + a.name);
+		assign.type = assign.e1.type;
+	}
+	private void processNode(AST.static_dispatch sd) {
+		AST.method m = null;
+		boolean found = false;
+		processNode(sd.caller);				// first process the caller.
+		
+		for(AST.expression e : sd.actuals)	// then process all of the actual parameters (left-to-right)
+			processNode(e);
 
-	// analyze main class. check for main class and main method
-	private boolean analyzeMainClass(boolean foundMain, boolean foundmain, boolean mainHasArgs, ClassInfo classInfo) {
+		
+		ClassPlus c = classTable.getClassPlus(sd.typeid);
+		if(c == null)
+			reportError(filename, sd.lineNo, "Static dispatch to undefined class " + sd.typeid);
+		else if(classTable.conforms(sd.caller.type, c.name) == false)
+			reportError(filename, sd.lineNo, "Expression type " + sd.caller.type + " does not conform to declared static dispatch type " + c.name);
+		else {
+			if(c.mlist.containsKey(sd.name)) {
+				found = true;
+				m = c.mlist.get(sd.name);
+				if(sd.actuals.size() != m.formals.size())
+					reportError(filename, sd.lineNo, "Method " + m.name + " invoked with wrong number of arguments.");
+				else {
+					for(int i = 0; i < sd.actuals.size(); ++i) {
+						String actual_type = sd.actuals.get(i).type;
+						String formal_type = m.formals.get(i).typeid;
+						if(classTable.conforms(actual_type, formal_type) == false)
+							reportError(filename, sd.lineNo, "In call of method " + m.name + ", type " + actual_type + " does not conform to declared type " + formal_type);			
+					}
+				}	
+			}
+			else {
+				reportError(filename, sd.lineNo, "Static dispatch to undefined method " + sd.name);
+			}
+		}
+		if(found)
+			sd.type = m.typeid;
+		else
+			sd.type = "Object";
+		
+		
+	}
+	
+	private void processNode(AST.dispatch dispatch) {
+		AST.method m = null;
+		boolean found = false;
 
-		if (!foundMain) {
-			reportError("", 0, "Class Main not found.");
-			errorFlag = true;
+		processNode(dispatch.caller);
+
+		
+		for(AST.expression e : dispatch.actuals)
+			processNode(e);
+		
+		ClassPlus c = classTable.getClassPlus(dispatch.caller.type);
+		if(c == null) {
+			reportError(filename, dispatch.lineNo, "Class " + dispatch.caller.type + " is undefined.");
 		} else {
-			if (!foundmain) {
-				reportError("", 0, "main method not found in Class Main");
-				errorFlag = true;
-			} else {
-				if (!mainHasArgs) {
-					class_ classMain = classInfo.ClassNameMap.get(CoolUtils.MAIN_TYPE_STR);
-					reportError(classMain.filename, classMain.lineNo,
-							"In Class Main, 'main' method must not contain any arguments. Leave the arguments blank.");
-					errorFlag = true;
-				}
-			}
-		}
-		return errorFlag;
-	}
-
-	// recurse over type checker
-	private boolean recurseTypeChecker(AST.program program) {
-
-		for (class_ programClass : program.classes) {
-			// recurse over the components of the program
-			for (AST.feature classFeature : programClass.features) {
-				if (classFeature instanceof AST.attr) {
-					new TypeChecker((AST.attr) classFeature, classInfo, programClass);
-				} else if (classFeature instanceof AST.method) {
-					new TypeChecker((AST.method) classFeature, classInfo, programClass);
-				} else {
-					reportError(programClass.filename, programClass.lineNo, "Reached a forbidden point.");
-					errorFlag = true;
-				}
-			}
-		}
-		return errorFlag;
-	}
-
-	// check if an attribute of class is inherited
-	private boolean isAttrInherited(AST.attr classAttr, class_ programClass, ClassInfo classInfo) {
-		String programClassParent = classInfo.Graph.parentNameMap.get(programClass.name);
-		while (programClassParent != null) {
-			class_ nextParentClass = classInfo.ClassNameMap.get(programClassParent);
-			if (nextParentClass == null)
-				// if the parent is not found then there is no chance of inheritance
-				return false;
-			for (AST.feature classFeatures : nextParentClass.features) {
-				if ((classFeatures instanceof AST.attr) && (((AST.attr) classFeatures).name.equals(classAttr.name))) {
-					return true;
-				}
-			}
-			programClassParent = classInfo.Graph.parentNameMap.get(programClassParent);
-		}
-		return false;
-	}
-
-	// analyze and check class features given a program class
-	private boolean analyzeClassFeatures(AST.class_ programClass) {
-
-		return errorFlag;
-	}
-
-	// check for method overridding method redefinition while inheritance
-	private boolean checkMethodInheritanceCompat(AST.program program) {
-		boolean valid = true;
-		for (class_ programClass : program.classes) {
-			String parentClassName = programClass.parent;
-			Map<String, List<String>> class2MethodsMap = classInfo.methodInfo.lookUpGlobal(programClass.name);
-			while (parentClassName != null) {
-				// do this if parent exists
-				Map<String, List<String>> classParent2MethodsMap = classInfo.methodInfo.lookUpGlobal(parentClassName);
-				for (AST.feature classFeature : programClass.features) {
-					if (classFeature instanceof AST.method) {
-						AST.method classMethod = (AST.method) classFeature;
-						String methodName = classMethod.name;
-						if (classParent2MethodsMap.containsKey(methodName)) {
-							// match methdo formal argument list type
-							List<String> parentMethodArgsList = classParent2MethodsMap.get(methodName);
-							List<String> classMethodArgList = class2MethodsMap.get(methodName);
-							if (!parentMethodArgsList.equals(classMethodArgList)) {
-								reportError(programClass.filename, classMethod.lineNo, "Method " + methodName
-										+ " was inherited but was incompatible with method in parent class");
-								valid = false;
-							}
-						}
+			if(c.mlist.containsKey(dispatch.name)) {
+				//System.out.println("Found the method " + dispatch.name  + " in class " + c.name);
+				found = true;
+				m = c.mlist.get(dispatch.name);
+				//System.out.println("Return type of method " + m.name + " is " + m.typeid);
+				if(dispatch.actuals.size() != m.formals.size())
+					reportError(filename, dispatch.lineNo, "Method " + m.name + " invoked with wrong number of arguments.");
+				else {
+					for(int i = 0; i < dispatch.actuals.size(); ++i) {
+						String actual_type = dispatch.actuals.get(i).type;
+						String formal_type = m.formals.get(i).typeid;
+						if(classTable.conforms(actual_type, formal_type) == false)
+							reportError(filename, dispatch.lineNo, "In call of method " + m.name + ", type " + actual_type + " does not conform to declared type " + formal_type);			
 					}
-				}
-				parentClassName = classInfo.Graph.parentNameMap.get(parentClassName);
+				}	
+			}
+			else {
+				reportError(filename, dispatch.lineNo, "Dispatch to undefined method " + dispatch.name);
 			}
 		}
-		return valid;
+		if(found)
+			dispatch.type = m.typeid;
+		else
+			dispatch.type = "Object";
+	
+	}
+	private void processNode(AST.cond cond) {
+
+		processNode(cond.predicate);
+		if(cond.predicate.type.equals("Bool") == false) {
+			reportError(filename, cond.predicate.lineNo, "Predicate of 'if' does not have type Bool.");
+		}
+		processNode(cond.ifbody);
+		processNode(cond.elsebody);
+		cond.type = classTable.lca(cond.ifbody.type, cond.elsebody.type);
+	}
+	private void processNode(AST.loop loop) {
+
+		processNode(loop.predicate);
+		if(loop.predicate.type.equals("Bool") == false) {
+			reportError(filename, loop.predicate.lineNo, "Loop condition does not have type Bool.");
+		}
+		processNode(loop.body);
+		loop.type = "Object";
+	}
+	private void processNode(AST.block block) {
+		for(AST.expression e : block.l1)
+			processNode(e);
+		block.type = block.l1.get(block.l1.size() - 1).type;
+	}
+	private void processNode(AST.let let) {
+		if(let.value.getClass() != AST.no_expr.class) {
+			processNode(let.value);
+			if(classTable.conforms(let.value.type, let.typeid) == false)
+				reportError(filename, let.lineNo, "Inferred type of " + let.value.type + " of initialization"
+						+ "of " + let.name + " does not conform to idenitifier's declared type " + let.typeid);
+		}
+		scopeTable.enterScope();
+		scopeTable.insert(let.name, new AST.attr(let.name, let.typeid, let.value, let.lineNo));
+		processNode(let.body);
+		/*
+		 * testing.cl:1: Inferred type String of initialization of b does not conform to identifier's declared type Int.
+		 */
+		let.type = let.body.type;
+		scopeTable.exitScope();
+	}
+	private void processNode(AST.typcase typcase) {
+		processNode(typcase.predicate);
+		for(AST.branch e : typcase.branches) {
+			scopeTable.enterScope();
+			ClassPlus c = classTable.getClassPlus(e.type);
+			if(c == null) {
+				reportError(filename, e.lineNo, "Class " + e.type + " of case branch is undefined.");
+				scopeTable.insert(e.name, new AST.attr(e.name, "Object", e.value, e.lineNo));	// In the case of erroneous branch type, branch variable has type "Object" for the scope.
+			}
+			else scopeTable.insert(e.name, new AST.attr(e.name, e.type, e.value, e.lineNo));
+			processNode(e.value);
+			scopeTable.exitScope();
+		}
+		HashMap <String, Boolean> br_types = new HashMap<String, Boolean> ();
+		AST.branch b = typcase.branches.get(0);
+		String typ = b.value.type;
+		
+		for(AST.branch br : typcase.branches) {
+			if(br_types.containsKey(br.type) == false)
+				br_types.put(br.type, true);
+			else
+				reportError(filename, br.lineNo, "Duplicate branch " + br.type + " in case statement.");
+			typ = classTable.lca(typ, br.value.type);
+		}
+		typcase.type = typ;
+	}
+
+	private void processNode(AST.new_ new_) {
+		ClassPlus c = classTable.getClassPlus(new_.typeid);
+		if(c == null) {
+			reportError(filename, new_.lineNo, "'new' used with undefined class " + new_.typeid);
+			new_.type = "Object";
+		} else
+			new_.type = new_.typeid;
+	}
+	private void processNode(AST.isvoid isvoid) {
+		isvoid.type = "Bool";
+	}
+	private void processNode(AST.plus plus) {
+		processNode(plus.e1);
+		processNode(plus.e2);
+		if(plus.e1.type.equals("Int") == false || plus.e2.type.equals("Int") == false) {
+			reportError(filename, plus.lineNo, "non-Int arguments: " + plus.e1.type + " + " + plus.e2.type);
+		}
+		plus.type = "Int";
+	}
+	private void processNode(AST.sub sub) {
+		processNode(sub.e1);
+		processNode(sub.e2);
+		if(sub.e1.type.equals("Int") == false || sub.e2.type.equals("Int") == false) {
+			reportError(filename, sub.lineNo, "non-Int arguments: " + sub.e1.type + " - " + sub.e2.type);
+		}
+		sub.type = "Int";
+	}
+	
+	private void processNode(AST.mul mul) {
+		processNode(mul.e1);
+		processNode(mul.e2);
+		if(mul.e1.type .equals("Int") == false || mul.e2.type.equals("Int") == false) {
+			reportError(filename, mul.lineNo, "non-Int arguments: " + mul.e1.type + " * " + mul.e2.type);
+		}
+		mul.type = "Int";
+	}
+	
+	private void processNode(AST.divide divide) {
+		processNode(divide.e1);
+		processNode(divide.e2);
+		if(divide.e1.type .equals("Int") == false || divide.e2.type.equals("Int") == false) {
+			reportError(filename, divide.lineNo, "non-Int arguments: " + divide.e1.type + " / " + divide.e2.type);
+		}
+		divide.type = "Int";
+		
+	}
+	private void processNode(AST.comp comp) {	// comp is NOT
+
+		processNode(comp.e1);
+
+		if(comp.e1.type.equals("Bool") == false)
+			reportError(filename, comp.lineNo, "Argument of 'not' has type " + comp.e1.type + " instead of Bool.");
+		comp.type = "Bool";
+
+	}
+	private void processNode(AST.lt lt) {
+		processNode(lt.e1);
+		processNode(lt.e2);
+		if(lt.e1.type.equals("Int") == false || lt.e2.type.equals("Int") == false) {
+			reportError(filename, lt.lineNo, "non-Int arguments: " + lt.e1.type + " < " + lt.e2.type);
+		}
+		lt.type = "Bool";
+	}
+	private void processNode(AST.leq leq) {
+		processNode(leq.e1);
+		processNode(leq.e2);
+		if(leq.e1.type.equals("Int") == false || leq.e2.type.equals("Int") == false) {
+			reportError(filename, leq.lineNo, "non-Int arguments:" + leq.e1.type + " <= " + leq.e2.type);
+		}
+		leq.type = "Bool";
+	}
+	private void processNode(AST.eq eq) {
+		processNode(eq.e1);
+		processNode(eq.e2);
+		List <String> basic_types = Arrays.asList("String", "Int", "Bool");
+		if(basic_types.contains(eq.e1.type) || basic_types.contains(eq.e2.type)) {
+			if(eq.e1.type.equals(eq.e2.type) == false) {
+				reportError(filename, eq.lineNo, "Illegal comparison with a basic type.");
+			}
+		}
+		eq.type = "Bool";
+	}
+	private void processNode(AST.neg neg) {		// neg is ~
+
+		processNode(neg.e1);
+		if(neg.e1.type.equals("Int") == false)
+			reportError(filename, neg.lineNo, "Argument of '~' has type " + neg.e1.type + " instead of Int");
+		neg.type = "Int";
+	}
+	private void processNode(AST.object object) {
+
+		AST.attr a = scopeTable.lookUpGlobal(object.name);
+		if(a == null) {
+			reportError(filename, object.lineNo, "Undeclared identifier " + object.name);
+			object.type = "Object";
+		}
+		else
+			object.type = a.typeid;
+	}
+	private void processNode(AST.int_const int_const) {
+		int_const.type = "Int";
+	}
+	private void processNode(AST.string_const string_const) {
+		string_const.type = "String";
+	}
+	private void processNode(AST.bool_const bool_const) {
+		bool_const.type = "Bool";
 	}
 }

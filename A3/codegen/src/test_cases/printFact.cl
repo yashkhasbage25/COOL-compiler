@@ -13,9 +13,9 @@ class Main  {
             {
             new IO.out_string("Enter number : ");
             i <- new IO.in_int();
-            ans <- fact(i);
+            --ans <- fact(i);
             new IO.out_string("Ans : ");
-            new IO.out_int(ans);
+            --new IO.out_int(ans);
             new IO.out_string("\n");
             }
     };

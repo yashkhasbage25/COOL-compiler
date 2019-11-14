@@ -53,7 +53,7 @@ class CoolUtils {
         out.println("target triple = \"x86_64-unknown-linux-gnu\"");
         out.println("define void @_CN6Object_FN6Object_(%class.Object* %this) {\nentry:\t\nret void\n}");
         out.println(
-                "define i32 @_CN2IO_FN2IO_(%class.IO* %this) {\nentry:\n\t%0 = bitcast %class.IO* %this to %class.Object*\n\tcall void @_CN6Object_FN6Object_(%class.Object* %0)\n\tret i32 0\n}");
+                "define void @_CN2IO_FN2IO_(%class.IO* %this) {\nentry:\n\t%0 = bitcast %class.IO* %this to %class.Object*\n\tcall void @_CN6Object_FN6Object_(%class.Object* %0)\n\tret void\n}");
         // out.println("define void @_CN4Main_FN4Main_(%class.Main* %this) {\n entry:\n
         // %0 = bitcast %class.Main* %this to %class.Object*\n call void
         // @_CN6Object_FN6Object_(%class.Object* %0)\n ret void}");
@@ -71,7 +71,7 @@ class CoolUtils {
         out.println("define %class.Object* @_CN6Object_FN5abort_( %class.Object* %this ) noreturn {\n" + "entry:\n"
                 + "\tcall void @exit( i32 1 )\n" + "\tret %class.Object* null\n" + "}\n");
 
-        out.println("define i8* @CN6Object_FN9type_name(%class.Object* %this) {\n" + "\tentry:\n"
+        out.println("define i8* @_CN6Object_FN9type_name_(%class.Object* %this) {\n\tentry:\n"
                 + "\t%0 = getelementptr inbounds %class.Object, %class.Object* %this, i32 0, i32 0\n"
                 + "\t%1 = load i8*, i8** %0, align 8\n" + "\tret i8* %1\n" + "}");
     }

@@ -25,10 +25,10 @@ public class Codegen {
 		initializeDefaultAttributes();
 
 		// collect default classes and their methods
-		addDefaultClasses();
+		addDefaultClasses(out);
 
 		// build inheritance graph for cool classes
-		buildGraph(program);
+		buildGraph(program,out);
 
 		// print ir for classes
 		printIR(out);
@@ -50,31 +50,35 @@ public class Codegen {
 
 	}
 
-	private void addDefaultClasses() {
+	private void addDefaultClasses(PrintWriter out) {
 		// add object class in inheritance graph
-		addObjectClass();
+		addObjectClass(out);
 		// add IO class in inheritance graph
-		addIOClass();
+		addIOClass(out);
 		// add String class in inheritance graph
-		addStringClass();
+		addStringClass(out);
 		// add int class in inheritance graph
-		addIntClass();
+		addIntClass(out);
 		// add bool class in inheritance graph
-		addBoolClass();
+		addBoolClass(out);
 	}
 
-	public void addObjectClass() {
+	public void addObjectClass(PrintWriter out) {
 
 		HashMap<String, AST.method> methods = new HashMap<String, AST.method>();
 		// Object class has only these methods: abort and type_name
-		methods.put("abort", new AST.method("abort", new ArrayList<AST.formal>(), CoolUtils.OBJECT_TYPE_STR, new AST.no_expr(0), 0));
-		methods.put("type_name", new AST.method("type_name", new ArrayList<AST.formal>(), CoolUtils.OBJECT_TYPE_STR, new AST.no_expr(0), 0));
-		IRClassInfo objectClassInfo = new IRClassInfo(CoolUtils.OBJECT_TYPE_STR, null, new HashMap<String, AST.attr>(), methods, CoolUtils.OBJECT_CLASS_SIZE);
+		methods.put("abort", new AST.method("abort", new ArrayList<AST.formal>(),
+			CoolUtils.OBJECT_TYPE_STR, new AST.no_expr(0), 0));
+		methods.put("type_name", new AST.method("type_name", new ArrayList<AST.formal>(),
+			CoolUtils.OBJECT_TYPE_STR, new AST.no_expr(0), 0));
+		IRClassInfo objectClassInfo = new IRClassInfo(CoolUtils.OBJECT_TYPE_STR,
+			null, new HashMap<String, AST.attr>(), methods, CoolUtils.OBJECT_CLASS_SIZE);
 		className2IRClassInfoMap.put(CoolUtils.OBJECT_TYPE_STR, objectClassInfo);
+		defineStringConstString("Object",out);
 
 	}
 
-	public void addIOClass() {
+	public void addIOClass(PrintWriter out) {
 
 		// IO class methods
 		HashMap<String, AST.method> methods = new HashMap<String, AST.method>();
@@ -82,8 +86,7 @@ public class Codegen {
 		// formals of out_string
 		List<AST.formal> outStringFormals = new ArrayList<AST.formal>();
 		outStringFormals.add(new AST.formal("out_string", CoolUtils.STRING_TYPE_STR, 0));
-		methods.put("out_string",
-				new AST.method("out_string", outStringFormals, CoolUtils.IO_TYPE_STR, new AST.no_expr(0), 0));
+		methods.put("out_string", new AST.method("out_string", outStringFormals, CoolUtils.IO_TYPE_STR, new AST.no_expr(0), 0));
 
 		// formals of out_int
 		List<AST.formal> outIntFormals = new ArrayList<AST.formal>();
@@ -100,9 +103,10 @@ public class Codegen {
 		IRClassInfo IOClassInfo = new IRClassInfo(CoolUtils.IO_TYPE_STR, CoolUtils.OBJECT_TYPE_STR,
 				new HashMap<String, AST.attr>(), methods, CoolUtils.IO_CLASS_SIZE);
 		className2IRClassInfoMap.put(CoolUtils.IO_TYPE_STR, IOClassInfo);
+		defineStringConstString("IO",out);
 	}
 
-	public void addIntClass() {
+	public void addIntClass(PrintWriter out) {
 
 		// int class methods
 		HashMap<String, AST.method> methods = new HashMap<String, AST.method>();
@@ -111,10 +115,11 @@ public class Codegen {
 		IRClassInfo intClassInfo = new IRClassInfo(CoolUtils.INT_TYPE_STR, CoolUtils.OBJECT_TYPE_STR,
 				new HashMap<String, AST.attr>(), new HashMap<String, AST.method>(), CoolUtils.INT_CLASS_SIZE);
 		className2IRClassInfoMap.put(CoolUtils.INT_TYPE_STR, intClassInfo);
+		defineStringConstString("Int",out);
 
 	}
 
-	public void addBoolClass() {
+	public void addBoolClass(PrintWriter out) {
 
 		// methods in bool class
 		HashMap<String, AST.method> methods = new HashMap<String, AST.method>();
@@ -123,10 +128,10 @@ public class Codegen {
 		IRClassInfo boolClassInfo = new IRClassInfo(CoolUtils.BOOL_TYPE_STR, CoolUtils.OBJECT_TYPE_STR,
 				new HashMap<String, AST.attr>(), methods, CoolUtils.BOOL_CLASS_SIZE);
 		className2IRClassInfoMap.put(CoolUtils.BOOL_TYPE_STR, boolClassInfo);
-
+		defineStringConstString("Bool",out);
 	}
 
-	public void addStringClass() {
+	public void addStringClass(PrintWriter out) {
 
 		// string class methods and formals
 		HashMap<String, AST.method> methods = new HashMap<String, AST.method>();
@@ -134,6 +139,7 @@ public class Codegen {
 		// concat method of string class
 		List<AST.formal> concatFormals = new ArrayList<AST.formal>();
 		// formal args
+		defineStringConstString("String",out);
 		concatFormals.add(new AST.formal("str", CoolUtils.STRING_TYPE_STR, 0));
 		methods.put("concat",
 				new AST.method("concat", concatFormals, CoolUtils.STRING_TYPE_STR, new AST.no_expr(0), 0));
@@ -154,7 +160,7 @@ public class Codegen {
 		className2IRClassInfoMap.put(CoolUtils.STRING_TYPE_STR, stringClassInfo);
 	}
 
-	private void buildGraph(AST.program program) {
+	private void buildGraph(AST.program program,PrintWriter out) {
 
 		// create inheritance graph
 		// first, default classes
@@ -162,6 +168,8 @@ public class Codegen {
 
 		// user defined classes
 		for (class_ programClass : program.classes) {
+			defineStringConstString(programClass.name,out);
+			stringCounter.incrementIndex();
 			String parentClassName = programClass.parent;
 			String programClassName = programClass.name;
 			className2ClassMap.put(programClassName, programClass);
@@ -196,7 +204,8 @@ public class Codegen {
 				+ "\t%main = alloca %class.Main, align 8\n"
 				+ "\tcall void @_CN4Main_FN4Main_(%class.Main* %main)\n"
 				+ "\t%retval = call " + CoolUtils.printTypes2(mainRetType) + " @_CN4Main_FN4main_(%class.Main* %main)\n"
-				+ "\tret i32 0\n" + "}");
+				+ "\tret i32 0\n"
+				+ "}");
 
 	}
 
@@ -221,6 +230,10 @@ public class Codegen {
 		AST.string_const stringConstExpr = (AST.string_const) expr;
 		globalStr.add("@.str." + stringCounter.incrementIndex() + " = private unnamed_addr " + "constant ["
 				+ (stringConstExpr.value.length() + 1) + " x i8] c\"" + stringConstExpr.value + "\\00\", align 1");
+	}
+	private void defineStringConstString(String className, PrintWriter out) {
+		globalStr.add("@.str." + className + " = private unnamed_addr " + "constant ["
+				+ (className.length() + 1) + " x i8] c\"" + className + "\\00\", align 1");
 	}
 
 	private void PrintMethods(List<String> dfsOrdering, PrintWriter out) {
@@ -313,6 +326,8 @@ public class Codegen {
 				out.println("\tcall void @" + CoolUtils.getMangledName(parentName, parentName) + "(%class." + parentName
 						+ "* %" + registerCounter.getIndex() + ")");
 			}
+
+			// out.println("call void @")
 			for (AST.attr classAttr : className2IRClassInfoMap.get(className).classAttrs.values()) {
 				System.out.println("constructor assign call of " + classAttr.name+" "+className);
 				if (!(classAttr.value instanceof AST.no_expr)) {
@@ -349,7 +364,17 @@ public class Codegen {
 							+ CoolUtils.printTypes2(classAttr.typeid) + "* %" + registerCounter.getIndex() + ", align 4");
 				}
 			}
-			out.println("ret void\n}");
+			// out.println("\t%" + registerCounter.incrementIndex() + " = bitcast %class." + className
+			// 	+ "* this to %class.Object*");
+			out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds "
+				+ "%class." + className + ", %class." + className + "* %this, i32 0, i32 0, i32 0, i32 0");
+			out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds ["
+				+ (className.length() + 1) + " x i8], [" + (className.length() + 1) + " x i8]* @.str."
+				+ className + ", i32 0, i32 0");
+			out.println("\tstore i8* %"+ registerCounter.getIndex() + ", i8** %"
+				+ registerCounter.prevIndex() + ", align 8");
+			out.println("\tret void\n"
+				+ "}");
 		}
 	}
 
@@ -405,8 +430,8 @@ public class Codegen {
 				+ stringExpr.value + "\\00\", align 1\n");
 			stringCounter.incrementIndex();
 			out.println("\t%" + registerCounter.incrementIndex() + " = bitcast "
-				+ ty + "* @.str" + stringCounter.prevIndex() + " to [1024 x i8]*");
-			return "[1024 x i8]* %" + registerCounter.getIndex();
+				+ ty + "* @.str" + stringCounter.prevIndex() + " to i8*");
+			return "i8* %" + registerCounter.getIndex();
 		} else if(expr instanceof AST.int_const) {
 			System.out.println("int const");
 
@@ -492,10 +517,10 @@ public class Codegen {
 				+ ifCounter.getIndex() + ", label %if.else" + ifCounter.getIndex());
 			out.println("if.then" + ifCounter.getIndex() + ":");
 			blocks.add("if.then" + ifCounter.getIndex());
-			out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [22 x i8]* @Abortdivby0 to [1024 x i8]*");
+			out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [22 x i8]* @Abortdivby0 to i8*");
 			out.println("\t%" + registerCounter.incrementIndex() + " = call %class.IO* @"
 				+ CoolUtils.getMangledName(CoolUtils.IO_TYPE_STR, "out_string")
-				+ "(%class.IO* null, [1024 x i8]* %"
+				+ "(%class.IO* null, i8* %"
 				+ registerCounter.prevIndex() + ")");
 			out.println("\tcall void @exit(i32 1)");
 			out.println("\tbr label %if.else" + ifCounter.getIndex());
@@ -665,9 +690,9 @@ public class Codegen {
 				+ ifCounter.getIndex() + ", label %if.else" + ifCounter.getIndex());
 			out.println("if.then" + ifCounter.getIndex() + ":");
 			blocks.add("if.then" + ifCounter.getIndex());
-			out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [25 x i8]* @Abortdisvoid to [1024 x i8]*");
+			out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [25 x i8]* @Abortdisvoid to i8*");
 			out.println("\t%" + registerCounter.incrementIndex()
-				+ " = call %class.IO* @" + CoolUtils.getMangledName(CoolUtils.IO_TYPE_STR, "out_string") + "(%class.IO* null, [1024 x i8]* %"
+				+ " = call %class.IO* @" + CoolUtils.getMangledName(CoolUtils.IO_TYPE_STR, "out_string") + "(%class.IO* null, i8* %"
 				+ registerCounter.prevIndex() + ")");
 			out.println("\tcall void @exit(i32 1)");
 			out.println("\tbr label %if.else" + ifCounter.getIndex());

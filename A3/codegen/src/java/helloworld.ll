@@ -38,7 +38,9 @@ declare i8* @strncpy(i8*, i8*, i32)
 %class.String = type {	%class.Object}
 %class.Bool = type {	%class.Object}
 %class.IO = type {	%class.Object}
-%class.Main = type {	%class.IO ,%class.IO*}
+%class.Main = type {	%class.IO ,%class.B* ,%class.IO*}
+%class.A = type {	%class.Object ,i32}
+%class.B = type {	%class.Object ,%class.A*}
 define %class.Object* @_CN6Object_FN5abort_( %class.Object* %this ) noreturn {
 entry:
 	call void @exit( i32 1 )
@@ -121,41 +123,29 @@ entry:
 
 define i32 @_CN4Main_FN4main_(%class.Main* %this ){
 entry:
-	%0 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
+	%0 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 2
 	%1 = load %class.IO*, %class.IO** %0, align 4
-	%2 = bitcast [15 x i8]* @.str1 to i8*
-	%3 = icmp eq %class.IO* %1, null
-	br i1 %3, label %if.then0, label %if.else0
+	%2 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
+	%3 = load %class.B*, %class.B** %2, align 4
+	%4 = icmp eq %class.B* %3, null
+	br i1 %4, label %if.then0, label %if.else0
 if.then0:
-	%4 = bitcast [25 x i8]* @Abortdisvoid to i8*
-	%5 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* null, i8* %4)
+	%5 = bitcast [25 x i8]* @Abortdisvoid to i8*
+	%6 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* null, i8* %5)
 	call void @exit(i32 1)
 	br label %if.else0
 if.else0:
-	%6 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* %1, i8* %2)
-	%7 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
-	%8 = load %class.IO*, %class.IO** %7, align 4
-	%9 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
-	%10 = load %class.IO*, %class.IO** %9, align 4
-	%11 = icmp eq %class.IO* %10, null
-	br i1 %11, label %if.then1, label %if.else1
+	%7 = getelementptr inbounds %class.B, %class.B* %3, i32 0, i32 0
+	%8 = call i8* @_CN6Object_FN9type_name_(%class.Object* %7)
+	%9 = icmp eq %class.IO* %1, null
+	br i1 %9, label %if.then1, label %if.else1
 if.then1:
-	%12 = bitcast [25 x i8]* @Abortdisvoid to i8*
-	%13 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* null, i8* %12)
+	%10 = bitcast [25 x i8]* @Abortdisvoid to i8*
+	%11 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* null, i8* %10)
 	call void @exit(i32 1)
 	br label %if.else1
 if.else1:
-	%14 = getelementptr inbounds %class.IO, %class.IO* %10, i32 0, i32 0
-	%15 = call i8* @_CN6Object_FN9type_name_(%class.Object* %14)
-	%16 = icmp eq %class.IO* %8, null
-	br i1 %16, label %if.then2, label %if.else2
-if.then2:
-	%17 = bitcast [25 x i8]* @Abortdisvoid to i8*
-	%18 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* null, i8* %17)
-	call void @exit(i32 1)
-	br label %if.else2
-if.else2:
-	%19 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* %8, i8* %15)
+	%12 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* %1, i8* %8)
 	ret i32 2
 }
 
@@ -163,14 +153,47 @@ define void @_CN4Main_FN4Main_(%class.Main* %this ) {
 entry:
 	%0 = bitcast %class.Main* %this to %class.IO*
 	call void @_CN2IO_FN2IO_(%class.IO* %0)
-	%1 = call noalias i8* @malloc(i64 8)
-	%2 = bitcast i8* %1 to %class.IO*
-	call void @_CN2IO_FN2IO_(%class.IO*%2)
-	%3 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
-	store %class.IO* %2, %class.IO** %3, align 4
-	%4 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 0, i32 0, i32 0
-	%5 = getelementptr inbounds [5 x i8], [5 x i8]* @.str.Main, i32 0, i32 0
+	%1 = call noalias i8* @malloc(i64 16)
+	%2 = bitcast i8* %1 to %class.B*
+	call void @_CN1B_FN1B_(%class.B*%2)
+	%3 = bitcast %class.B* %2 to %class.Object*
+	%4 = getelementptr inbounds %class.Object, %class.Object* %3, i32 0, i32 0
+	%5 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.B, i32 0, i32 0
 	store i8* %5, i8** %4, align 8
+	%6 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
+	store %class.B* %2, %class.B** %6, align 4
+	%7 = call noalias i8* @malloc(i64 16)
+	%8 = bitcast i8* %7 to %class.IO*
+	call void @_CN2IO_FN2IO_(%class.IO*%8)
+	%9 = bitcast %class.IO* %8 to %class.Object*
+	%10 = getelementptr inbounds %class.Object, %class.Object* %9, i32 0, i32 0
+	%11 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.IO, i32 0, i32 0
+	store i8* %11, i8** %10, align 8
+	%12 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 2
+	store %class.IO* %8, %class.IO** %12, align 4
+	ret void
+}
+define void @_CN1A_FN1A_(%class.A* %this ) {
+entry:
+	%0 = bitcast %class.A* %this to %class.Object*
+	call void @_CN6Object_FN6Object_(%class.Object* %0)
+	%1 = getelementptr inbounds %class.A, %class.A* %this, i32 0, i32 1
+	store i32 0, i32* %1, align 4
+	ret void
+}
+define void @_CN1B_FN1B_(%class.B* %this ) {
+entry:
+	%0 = bitcast %class.B* %this to %class.Object*
+	call void @_CN6Object_FN6Object_(%class.Object* %0)
+	%1 = call noalias i8* @malloc(i64 8)
+	%2 = bitcast i8* %1 to %class.A*
+	call void @_CN1A_FN1A_(%class.A*%2)
+	%3 = bitcast %class.A* %2 to %class.Object*
+	%4 = getelementptr inbounds %class.Object, %class.Object* %3, i32 0, i32 0
+	%5 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.A, i32 0, i32 0
+	store i8* %5, i8** %4, align 8
+	%6 = getelementptr inbounds %class.B, %class.B* %this, i32 0, i32 1
+	store %class.A* %2, %class.A** %6, align 4
 	ret void
 }
 define i32 @main() {
@@ -185,8 +208,6 @@ entry:
 @.str.String = private unnamed_addr constant [7 x i8] c"String\00", align 1
 @.str.Int = private unnamed_addr constant [4 x i8] c"Int\00", align 1
 @.str.Bool = private unnamed_addr constant [5 x i8] c"Bool\00", align 1
+@.str.A = private unnamed_addr constant [2 x i8] c"A\00", align 1
+@.str.B = private unnamed_addr constant [2 x i8] c"B\00", align 1
 @.str.Main = private unnamed_addr constant [5 x i8] c"Main\00", align 1
-@.str1 = private unnamed_addr constant [15 x i8] c"Hello world!
-
-\00", align 1
-

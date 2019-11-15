@@ -356,23 +356,33 @@ public class Codegen {
 				} else {
 					System.out.println(className + " construnctor");
 					String ctype = CoolUtils.printTypes(className);
-					registerCounter.incrementIndex();
+					// registerCounter.incrementIndex();
 					// TODO
-					out.println("\t%" + registerCounter.getIndex() + " = getelementptr inbounds " + ctype + "," + ctype
+					out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds " + ctype + "," + ctype
 							+ "* %this, i32 0, i32 " + className2IRClassInfoMap.get(className).attrIndex.get(classAttr.name));
 					out.println("\tstore " + CoolUtils.printTypes2(classAttr.typeid) + " null, "
 							+ CoolUtils.printTypes2(classAttr.typeid) + "* %" + registerCounter.getIndex() + ", align 4");
+					// out.println("\t%" + registerCounter.incrementIndex() + " = bitcast %class."
+					// 	+ parentName + "* %" + registerCounter.prevIndex() + " to %class.Object*");
+					// out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds "
+					// 	+ "%class.Object, %class.Object* %" + registerCounter.prevIndex()
+					// 	+ ", i32 0, i32 0");
+					// out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds ["
+					// 	+ (parentName.length() + 1) + " x i8], [" + (.length() + 1)
+					// 	+ " x i8]* @.str." + parentName + ", i32 0, i32 0");
+					// out.println("store i8* %" + registerCounter.getIndex() + ", i8** %"
+					// 	+ registerCounter.prevIndex() + ", align 8");
 				}
 			}
 			// out.println("\t%" + registerCounter.incrementIndex() + " = bitcast %class." + className
 			// 	+ "* this to %class.Object*");
-			out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds "
-				+ "%class." + className + ", %class." + className + "* %this, i32 0, i32 0, i32 0, i32 0");
-			out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds ["
-				+ (className.length() + 1) + " x i8], [" + (className.length() + 1) + " x i8]* @.str."
-				+ className + ", i32 0, i32 0");
-			out.println("\tstore i8* %"+ registerCounter.getIndex() + ", i8** %"
-				+ registerCounter.prevIndex() + ", align 8");
+			// out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds "
+			// 	+ "%class." + className + ", %class." + className + "* %this, i32 0, i32 0, i32 0, i32 0");
+			// out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds ["
+			// 	+ (className.length() + 1) + " x i8], [" + (className.length() + 1) + " x i8]* @.str."
+			// 	+ className + ", i32 0, i32 0");
+			// out.println("\tstore i8* %"+ registerCounter.getIndex() + ", i8** %"
+			// 	+ registerCounter.prevIndex() + ", align 8");
 			out.println("\tret void\n"
 				+ "}");
 		}
@@ -575,12 +585,19 @@ public class Codegen {
 			out.println("\t%" + registerCounter.incrementIndex()
 				+ " = bitcast i8* %" + registerCounter.prevIndex()
 				+ " to " + type);
-			// out.println("\t%" + registerCounter.incrementIndex() + " = call "
-			// 	+ "i32 @" + CoolUtils.getMangledName(newExpr.typeid, newExpr.typeid)
-			// 	+ "(" + type + " %" + registerCounter.prevIndex() + ")");
 			out.println("\tcall void @" + CoolUtils.getMangledName(newExpr.typeid, newExpr.typeid)
 				+ "(" + type + "%" + registerCounter.getIndex() + ")");
-			return type + " %" + registerCounter.getIndex();
+			out.println("\t%" + registerCounter.incrementIndex() + " = bitcast %class." + newExpr.typeid
+				+ "* %" + registerCounter.prevIndex() + " to %class.Object*");
+			out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds "
+				+ "%class.Object, %class.Object* %"	+ registerCounter.prevIndex()
+				+ ", i32 0, i32 0");
+			out.println("\t%" + registerCounter.incrementIndex() + " = getelementptr inbounds ["
+				+ (newExpr.typeid.length() + 1) + " x i8], [" + (newExpr.typeid.length() + 1) + " x i8]* @.str."
+				+ newExpr.typeid + ", i32 0, i32 0");
+			out.println("\tstore i8* %"+ registerCounter.getIndex() + ", i8** %"
+				+ registerCounter.prevIndex() + ", align 8");
+			return type + " %" + registerCounter.prevIndex(3);
 		} else if(expr instanceof AST.assign) {
 			System.out.println("assign");
 
@@ -704,6 +721,7 @@ public class Codegen {
 			// TODO
 			IRClassInfo callerIRClassInfo = className2IRClassInfoMap.get(CoolUtils.reverseParseType(CoolUtils.reverseParseTypeValue(caller)));
 			while (!CoolUtils.reverseParseTypeValue(caller).equals(CoolUtils.printTypes2(staticDispatchExpr.typeid))) {
+				System.out.println("718: " + callerIRClassInfo.parent);
 				String par = CoolUtils.printTypes(callerIRClassInfo.parent);
 				String ty = CoolUtils.reverseParseTypeValue(caller);
 				ty = ty.substring(0, ty.length()-1);

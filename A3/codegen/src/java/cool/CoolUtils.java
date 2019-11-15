@@ -53,6 +53,9 @@ class CoolUtils {
         out.println("target triple = \"x86_64-unknown-linux-gnu\"");
         out.println("define void @_CN6Object_FN6Object_(%class.Object* %this) {\n"
                     + "entry:\n"
+                    // + "\t%0 = getelementptr inbounds %class.Object, %class.Object* %this, i32 0\n"
+                    // + "\t%1 = getelementptr inbounds [7 x i8], [7 x i8]* @.str.Object, i32 0, i32 0\n"
+                    // + "\tstore i8* %1, i8** %0, align 8\n"
                     + "\tret void\n"
                     + "}");
 
@@ -60,6 +63,9 @@ class CoolUtils {
                     + "entry:\n"
                     + "\t%0 = bitcast %class.IO* %this to %class.Object*\n"
                     + "\tcall void @_CN6Object_FN6Object_(%class.Object* %0)\n"
+                    // + "\t%1 = getelementptr inbounds %class.IO, %class.IO* %this, i32 0, i32 0, i32 0\n"
+                    // + "\t%2 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.IO, i32 0, i32 0\n"
+                    // + "\tstore i8* %2, i8** %1, align 8\n"
                     + "\tret void\n"
                     + "}");
         // out.println("define void @_CN4Main_FN4Main_(%class.Main* %this) {\n entry:\n

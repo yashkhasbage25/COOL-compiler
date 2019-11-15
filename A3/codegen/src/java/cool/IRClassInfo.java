@@ -18,9 +18,7 @@ public class IRClassInfo {
 		else
 			parent = null;
 		this.classAttrs = new HashMap<String, AST.attr>(classAttrs);
-		// alist.putAll(al);
 		this.classMethods = new HashMap<String, AST.method>(classMethods);
-		// mlist.putAll(ml);
 
 		attrIndex = new HashMap<String, Integer>();
 		int index = 1;

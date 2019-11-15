@@ -53,9 +53,6 @@ class CoolUtils {
         out.println("target triple = \"x86_64-unknown-linux-gnu\"");
         out.println("define void @_CN6Object_FN6Object_(%class.Object* %this) {\n"
                     + "entry:\n"
-                    // + "\t%0 = getelementptr inbounds %class.Object, %class.Object* %this, i32 0\n"
-                    // + "\t%1 = getelementptr inbounds [7 x i8], [7 x i8]* @.str.Object, i32 0, i32 0\n"
-                    // + "\tstore i8* %1, i8** %0, align 8\n"
                     + "\tret void\n"
                     + "}");
 
@@ -63,16 +60,12 @@ class CoolUtils {
                     + "entry:\n"
                     + "\t%0 = bitcast %class.IO* %this to %class.Object*\n"
                     + "\tcall void @_CN6Object_FN6Object_(%class.Object* %0)\n"
-                    // + "\t%1 = getelementptr inbounds %class.IO, %class.IO* %this, i32 0, i32 0, i32 0\n"
-                    // + "\t%2 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.IO, i32 0, i32 0\n"
-                    // + "\tstore i8* %2, i8** %1, align 8\n"
                     + "\tret void\n"
                     + "}");
-        // out.println("define void @_CN4Main_FN4Main_(%class.Main* %this) {\n entry:\n
-        // %0 = bitcast %class.Main* %this to %class.Object*\n call void
-        // @_CN6Object_FN6Object_(%class.Object* %0)\n ret void}");
-        out.println("@Abortdivby0 = private unnamed_addr constant [22 x i8] c\"Error: Division by 0\\0A\\00\", align 1\n"
-                + "@Abortdisvoid = private unnamed_addr constant [25 x i8] c\"Error: Dispatch to void\\0A\\00\", align 1\n");
+
+        out.println("@Abortdivby0 = private unnamed_addr constant [22 x i8] c\"Error: Division by 0\\0A\\00\", align 1\n");
+        out.println("@Abortdisvoid = private unnamed_addr constant [25 x i8] c\"Error: Dispatch to void\\0A\\00\", align 1\n");
+
         out.println("; C malloc declaration\n"
             + "declare noalias i8* @malloc(i64)\n"
             + "; C exit declaration\n"
@@ -92,8 +85,6 @@ class CoolUtils {
 
         out.println("@strformatstr = private unnamed_addr constant [3 x i8] c\"%s\\00\", align 1\n"
                 + "@intformatstr = private unnamed_addr constant [3 x i8] c\"%d\\00\", align 1\n");
-        // out.println("define i32 @_CN4Main_FN4main_(%class.Main* %this) {" +
-        // "entry:\nret i32 0\n}");
     }
 
     public static void PrintMethodsObject(PrintWriter out) {
@@ -190,7 +181,7 @@ class CoolUtils {
         return mangledName.toString();
     }
 
-    public static boolean IsDefaultClass(String s) {
+    public static boolean isDefaultClass(String s) {
         if (s.equals(INT_TYPE_STR) || s.equals(STRING_TYPE_STR) || s.equals(OBJECT_TYPE_STR) || s.equals(BOOL_TYPE_STR)
                 || s.equals(IO_TYPE_STR))
             return true;
@@ -252,32 +243,34 @@ class CoolUtils {
         return null;
     }
 
-    public static String reverseParseTypeValue(String t) {
-        System.out.println("191: reverseParseTypeValue " + t);
-		if (t.length() > 12 && t.substring(0, 12).equals("i8*")) {
-			return "i8*";
-		} else {
-			return t.split(" ")[0];
-		}
+    // input: <ir-type> %reg
+    // output: <ir-type>
+    public static String getIRTypeFromTypeNReg(String typeNReg) {
+		return typeNReg.split(" ")[0];
 	}
 
-	// Return var given in format "type %var"
-	public static String reverseParseTypeValueVar(String t) {
-		String[] vals = t.split(" ");
-		return vals[vals.length-1];
+	// input: <ir-type> %reg
+    // output: %reg
+	public static String getRegisterFromTypeNReg(String typeNReg) {
+		String[] strings = typeNReg.split(" ");
+		return strings[strings.length-1];
 	}
 
-    public static String reverseParseType(String t){
-        if (t.equals("i32")) {
-            System.out.println("I will never come here reverseParseType");
-            return "Int";
-        } else if (t.equals("i8*")) {
-            return "String";
+    // input: <ir-type>
+    // output: <Cool-type>
+    public static String getCoolTypeFromIRType(String IRType){
+        if (IRType.equals("i32")) {
+            System.out.println("getCoolTypeFromIRType: Should not have reached here!!!");
+            return INT_TYPE_STR;
+        } else if (IRType.equals("i8*")) {
+            return STRING_TYPE_STR;
         } else {
-            return t.substring(7, t.length()-1);
+            System.out.println("getCoolTypeFromIRType: Should not have reached here!!!");
+            return "";
         }
     }
 
+    // input: <ir-type> OR <ir-type> %reg
     public static boolean isPointer(String register) {
         if(register.indexOf("*") != -1) return true;
         else return false;

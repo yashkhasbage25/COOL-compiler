@@ -19,7 +19,6 @@ class C inherits B {
 class Main {
 	b:B;
     main() : Int {
-        b@A.f1(1);
-        0
+        b@A.f1(1)
     };
 };

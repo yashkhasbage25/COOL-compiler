@@ -1,5 +1,3 @@
-(* Illustrates inheritance *)
-
 class D {
     a : Int;
 };

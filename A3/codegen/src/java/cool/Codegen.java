@@ -430,7 +430,7 @@ public class Codegen {
 		if(expr instanceof AST.bool_const) {
 			System.out.println("bool cost");
 			AST.bool_const boolExpr = (AST.bool_const) expr;
-			return "i32 " + (boolExpr.value ? 1 : 0);
+			return "i8 " + (boolExpr.value ? 1 : 0);
 		} else if(expr instanceof AST.string_const) {
 			System.out.println("string cost");
 			AST.string_const stringExpr = (AST.string_const) expr;
@@ -656,7 +656,8 @@ public class Codegen {
 			out.println("loop.cond" + loopCounter.getIndex() + ":");
 			blocks.add("loop.cond" + loopCounter.getIndex());
 			String predicate = handleExpr(classInfo, loopExpr.predicate, formalsMap, blocks, out);
-			out.println("\tbr i1 " + predicate.substring(4) + ", label %loop.body"
+			System.out.println("659: predicate " + predicate);
+			out.println("\tbr i1 " + predicate.substring(3) + ", label %loop.body"
 				+ loopCounter.getIndex() + " , label %loop.end" + loopCounter.getIndex());
 			out.println("loop.body" + loopCounter.getIndex() + ":");
 			blocks.add("loop.body" + loopCounter.getIndex());
@@ -701,10 +702,12 @@ public class Codegen {
 			}
 
 			ifCounter.incrementIndex();
+			
 			out.println("\t%" + registerCounter.incrementIndex() + " = icmp eq "
 				+ caller + ", null");
 			out.println("\tbr i1 %" + registerCounter.getIndex() + ", label %if.then"
 				+ ifCounter.getIndex() + ", label %if.else" + ifCounter.getIndex());
+
 			out.println("if.then" + ifCounter.getIndex() + ":");
 			blocks.add("if.then" + ifCounter.getIndex());
 			out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [25 x i8]* @Abortdisvoid to i8*");
@@ -724,7 +727,7 @@ public class Codegen {
 				System.out.println("718: " + callerIRClassInfo.parent);
 				String par = CoolUtils.printTypes(callerIRClassInfo.parent);
 				String ty = CoolUtils.reverseParseTypeValue(caller);
-				ty = ty.substring(0, ty.length()-1);
+				if(CoolUtils.isPointer(ty)) ty = ty.substring(0, ty.length()-1);
 				// TODO
 				out.println("\t%" + registerCounter.incrementIndex() +
 					" = getelementptr inbounds "+ ty + ", " + ty + "* "
@@ -744,9 +747,9 @@ public class Codegen {
 		} else {
 			System.out.println("expression type was not expected");
 			System.out.println(expr.type);
-			return "";
+			return "wrong_expr_type. might be dynamic dispatch";
 		}
-		System.out.println("no expr type");
-		return "";
+		System.out.println("wrong_expr_type. might be dynamic dispatch");
+		return "wrong_expr_type. might be dynamic dispatch";
 	}
 }

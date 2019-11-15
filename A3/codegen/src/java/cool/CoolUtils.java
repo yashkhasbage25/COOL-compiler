@@ -277,4 +277,9 @@ class CoolUtils {
             return t.substring(7, t.length()-1);
         }
     }
+
+    public static boolean isPointer(String register) {
+        if(register.indexOf("*") != -1) return true;
+        else return false;
+    }
 }

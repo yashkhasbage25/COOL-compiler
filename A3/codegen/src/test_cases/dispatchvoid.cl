@@ -1,8 +1,13 @@
 class A {
-	a() : Int {3};
+	a : Int;
+	f1() : Int {
+		0
+	};
 };
 
 class Main {
 	a : A;
-	main() : Int {a@A.a()};
+	main() : Int {
+		a@A.f1()
+	};
 };

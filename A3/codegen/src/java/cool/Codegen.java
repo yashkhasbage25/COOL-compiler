@@ -266,7 +266,7 @@ public class Codegen {
 			if (className.equals(CoolUtils.OBJECT_TYPE_STR))
 				out.print("i8*");
 			else {
-				// TODO
+				// parent object
 				out.print("%class." + inheritanceGraph.parentNameMap.get(className));
 				// get attribute types
 				for (AST.attr classAttrs : className2IRClassInfoMap.get(className).classAttrs.values()) {

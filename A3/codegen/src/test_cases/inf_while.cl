@@ -1,6 +1,6 @@
 class Main {
 	a : Int;
-	main() : Int {{
+	main() : Object {{
 		while true loop {1;} pool;
 	}};
 };

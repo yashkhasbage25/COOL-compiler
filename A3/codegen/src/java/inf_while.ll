@@ -40,22 +40,13 @@ declare i8* @strncpy(i8*, i8*, i32)
 %class.String = type {	%class.Object}
 %class.Bool = type {	%class.Object}
 %class.IO = type {	%class.Object}
-%class.A = type {	%class.Object ,i32}
-%class.Main = type {	%class.Object ,%class.A*}
-define void @_CN1A_FN1A_(%class.A* %this) {
-entry:
-	%0 = bitcast %class.A* %this to %class.Object*
-	call void @_CN6Object_FN6Object_(%class.Object* %0)
-	%1 = getelementptr inbounds %class.A, %class.A* %this, i32 0, i32 1
-	store i32 0, i32* %1, align 4
-	ret void
-}
+%class.Main = type {	%class.Object ,i32}
 define void @_CN4Main_FN4Main_(%class.Main* %this) {
 entry:
 	%0 = bitcast %class.Main* %this to %class.Object*
 	call void @_CN6Object_FN6Object_(%class.Object* %0)
-	%1 = getelementptr inbounds %class.Main,%class.Main* %this, i32 0, i32 1
-	store %class.A* null, %class.A** %1, align 4
+	%1 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
+	store i32 0, i32* %1, align 4
 	ret void
 }
 define %class.Object* @_CN6Object_FN5abort_(%class.Object* %this) noreturn {
@@ -138,32 +129,24 @@ entry:
 	ret i32 %retval
 }
 
-define i32 @_CN1A_FN2f1_(%class.A* %this ) {
+define %class.Object* @_CN4Main_FN4main_(%class.Main* %this ) {
 entry:
-	ret i32 0
-}
-
-define i32 @_CN4Main_FN4main_(%class.Main* %this ) {
-entry:
-	%0 = getelementptr inbounds %class.Main, %class.Main* %this, i32 0, i32 1
-	%1 = load %class.A*, %class.A** %0, align 4
-	%2 = icmp eq %class.A* %1, null
-	br i1 %2, label %if.then0, label %if.else0
-if.then0:
-	%3 = bitcast [25 x i8]* @Abortdisvoid to i8*
-	%4 = call %class.IO* @_CN2IO_FN10out_string_(%class.IO* null, i8* %3)
-	call void @exit(i32 1)
-	br label %if.else0
-if.else0:
-	%5 = call i32 @_CN1A_FN2f1_(%class.A* %1)
-	ret i32 %5
+	br label %loop.cond0
+loop.cond0:
+	br i1 1, label %loop.body0 , label %loop.end0
+loop.body0:
+	br label %loop.cond0
+loop.end0:
+	%0 = call noalias i8* @malloc(i64 8)
+	%1 = bitcast i8* %0 to %class.Object*
+	ret %class.Object* %1
 }
 
 define i32 @main() {
 entry:
 	%main = alloca %class.Main, align 8
 	call void @_CN4Main_FN4Main_(%class.Main* %main)
-	%retval = call i32 @_CN4Main_FN4main_(%class.Main* %main)
+	%retval = call %class.Object* @_CN4Main_FN4main_(%class.Main* %main)
 	ret i32 0
 }
 @.str.Object = private unnamed_addr constant [7 x i8] c"Object\00", align 1
@@ -171,5 +154,4 @@ entry:
 @.str.String = private unnamed_addr constant [7 x i8] c"String\00", align 1
 @.str.Int = private unnamed_addr constant [4 x i8] c"Int\00", align 1
 @.str.Bool = private unnamed_addr constant [5 x i8] c"Bool\00", align 1
-@.str.A = private unnamed_addr constant [2 x i8] c"A\00", align 1
 @.str.Main = private unnamed_addr constant [5 x i8] c"Main\00", align 1

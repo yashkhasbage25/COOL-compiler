@@ -11,6 +11,7 @@ entry:
 	ret void
 }
 @Abortdivby0 = private unnamed_addr constant [22 x i8] c"Error: Division by 0\0A\00", align 1
+
 @Abortdisvoid = private unnamed_addr constant [25 x i8] c"Error: Dispatch to void\0A\00", align 1
 
 ; C malloc declaration

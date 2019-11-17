@@ -1,14 +1,15 @@
 class A {
-    a : Int <- "A".length();
     f1() : Int {
         0
     };
 };
 
 class Main {
+
+    a : A <- new A;
     main() : Int {
         {
-            (1+2)@Object.abort();
+            (1)@Object.abort();
             0;
         }
     };

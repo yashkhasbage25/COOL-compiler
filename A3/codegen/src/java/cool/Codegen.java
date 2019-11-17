@@ -748,71 +748,150 @@ public class Codegen {
 			AST.static_dispatch staticDispatchExpr = (AST.static_dispatch) expr;
 			// <caller-expr>@<type>@<name>(actuals)
 			String callerReg = handleExpr(classInfo, staticDispatchExpr.caller, formalsSet, blocks, out);
+			if(CoolUtils.isPointer(callerReg)) {
+				List<String> actuals = new ArrayList<>();
+				for(AST.expression actual: staticDispatchExpr.actuals) {
+					String attrReg = handleExpr(classInfo, actual, formalsSet, blocks, out);
+					actuals.add(attrReg);
+				}
 
-			List<String> actuals = new ArrayList<>();
-			for(AST.expression actual: staticDispatchExpr.actuals) {
-				String attrReg = handleExpr(classInfo, actual, formalsSet, blocks, out);
-				actuals.add(attrReg);
+				ifCounter.incrementIndex();
+
+				// check if the object is null
+				out.println("\t%" + registerCounter.incrementIndex() + " = icmp eq "
+					+ callerReg + ", null");
+				out.println("\tbr i1 %" + registerCounter.getIndex() + ", label %if.then"
+					+ ifCounter.getIndex() + ", label %if.else" + ifCounter.getIndex());
+
+				// then block
+				// call abort
+				out.println("if.then" + ifCounter.getIndex() + ":");
+				blocks.add("if.then" + ifCounter.getIndex());
+				out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [25 x i8]* @Abortdisvoid to i8*");
+				out.println("\t%" + registerCounter.incrementIndex() + " = call %class.IO* @"
+					+ CoolUtils.getMangledName(CoolUtils.IO_TYPE_STR, "out_string") + "(%class.IO* null, i8* %"
+					+ registerCounter.prevIndex() + ")");
+				out.println("\tcall void @exit(i32 1)");
+				out.println("\tbr label %if.else" + ifCounter.getIndex());
+
+				// else block
+				// normal execution
+				out.println("if.else" + ifCounter.getIndex() + ":");
+				blocks.add("if.else" + ifCounter.getIndex());
+
+				// function call name
+				String funcName = "@" + CoolUtils.getMangledName(staticDispatchExpr.typeid, staticDispatchExpr.name);
+
+				// get irinfo of caller
+				IRClassInfo callerIRClassInfo = className2IRClassInfoMap.get(CoolUtils.getCoolTypeFromIRType(CoolUtils.getIRTypeFromTypeNReg(callerReg)));
+				while(!CoolUtils.getIRTypeFromTypeNReg(callerReg).equals(CoolUtils.convertCoolType2IRType(staticDispatchExpr.typeid))) {
+
+					// type cast the object to appropriate parent
+					String parentIRType = CoolUtils.getIRClassType(callerIRClassInfo.parent);
+					String callerTypeNReg = CoolUtils.getIRTypeFromTypeNReg(callerReg);
+					if(CoolUtils.isPointer(callerTypeNReg)) callerTypeNReg = callerTypeNReg.substring(0, callerTypeNReg.length()-1);
+					out.println("\t%" + registerCounter.incrementIndex() +
+						" = getelementptr inbounds "+ callerTypeNReg + ", " + callerTypeNReg + "* "
+						+ CoolUtils.getRegisterFromTypeNReg(callerReg) + ", i32 0, i32 0");
+					callerReg = parentIRType + "* %" + registerCounter.getIndex();
+					callerIRClassInfo = className2IRClassInfoMap.get(callerIRClassInfo.parent);
+				}
+
+				String actualsStr = callerReg;
+				for(int i = 0; i < actuals.size(); i++) {
+					actualsStr += ", " + actuals.get(i);
+				}
+
+				out.println("\t%" + registerCounter.incrementIndex() + " = call "
+					+ CoolUtils.convertCoolType2IRType(staticDispatchExpr.type) + " "
+					+ funcName + "(" + actualsStr + ")");
+				return CoolUtils.convertCoolType2IRType(staticDispatchExpr.type) + " %" + registerCounter.getIndex();
+			} else {
+				// when callerReg is of the form i32 or i8
+				// only abort or type_name can be called
+				// List<String> actuals = new ArrayList<>();
+				// for(AST.expression actual: staticDispatchExpr.actuals) {
+				// 	String attrReg = handleExpr(classInfo, actual, formalsSet, blocks, out);
+				// 	actuals.add(attrReg);
+				// }
+				// ifCounter.incrementIndex();
+				//
+				// // check if the object is null
+				// out.println("\t%" + registerCounter.incrementIndex() + " = icmp eq "
+				// 	+ callerReg + ", null");
+				// out.println("\tbr i1 %" + registerCounter.getIndex() + ", label %if.then"
+				// 	+ ifCounter.getIndex() + ", label %if.else" + ifCounter.getIndex());
+				//
+				// // then block
+				// // call abort
+				// out.println("if.then" + ifCounter.getIndex() + ":");
+				// blocks.add("if.then" + ifCounter.getIndex());
+				// out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [25 x i8]* @Abortdisvoid to i8*");
+				// out.println("\t%" + registerCounter.incrementIndex() + " = call %class.IO* @"
+				// 	+ CoolUtils.getMangledName(CoolUtils.IO_TYPE_STR, "out_string") + "(%class.IO* null, i8* %"
+				// 	+ registerCounter.prevIndex() + ")");
+				// out.println("\tcall void @exit(i32 1)");
+				// out.println("\tbr label %if.else" + ifCounter.getIndex());
+				//
+				// // else block
+				// // normal execution
+				// out.println("if.else" + ifCounter.getIndex() + ":");
+				// blocks.add("if.else" + ifCounter.getIndex());
+				//
+				// // function call name
+				// String funcName = "@" + CoolUtils.getMangledName(CoolUtils.OBJECT_TYPE_STR, staticDispatchExpr.name);
+				//
+				// // get irinfo of caller
+				// IRClassInfo callerIRClassInfo = className2IRClassInfoMap.get(CoolUtils.getCoolTypeFromIRType(CoolUtils.getIRTypeFromTypeNReg(callerReg)));
+				// while(!CoolUtils.getIRTypeFromTypeNReg(callerReg).equals(CoolUtils.convertCoolType2IRType(staticDispatchExpr.typeid))) {
+				//
+				// 	// type cast the object to appropriate parent
+				// 	String parentIRType = CoolUtils.getIRClassType(callerIRClassInfo.parent);
+				// 	String callerTypeNReg = CoolUtils.getIRTypeFromTypeNReg(callerReg);
+				// 	if(CoolUtils.isPointer(callerTypeNReg)) callerTypeNReg = callerTypeNReg.substring(0, callerTypeNReg.length()-1);
+				// 	out.println("\t%" + registerCounter.incrementIndex() +
+				// 		" = getelementptr inbounds "+ callerTypeNReg + ", " + callerTypeNReg + "* "
+				// 		+ CoolUtils.getRegisterFromTypeNReg(callerReg) + ", i32 0, i32 0");
+				// 	callerReg = parentIRType + "* %" + registerCounter.getIndex();
+				// 	callerIRClassInfo = className2IRClassInfoMap.get(callerIRClassInfo.parent);
+				// }
+				// String actualsStr = callerReg;
+				// for(int i = 0; i < actuals.size(); i++) {
+				// 	actualsStr += ", " + actuals.get(i);
+				// }
+
+				if (staticDispatchExpr.name.equals(CoolUtils.ABORT_FN_STR)) {
+					out.println("\tcall void @exit(i32 1)");
+					return "i8* null";
+				} else if (staticDispatchExpr.name.equals(CoolUtils.TYPE_NAME_FN_STR)) {
+					String callerIRType = CoolUtils.getIRTypeFromTypeNReg(callerReg);
+					if(callerIRType.equals("i8")) {
+						out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [5 x i8]* "
+							+ "@str.Bool to i8*");
+						return "i8* " + registerCounter.getIndex();
+					} else if(callerIRType.equals("i32")) {
+						out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [4 x i8]* "
+							+ "@str.Int to i8*");
+						return "i8* " + registerCounter.getIndex();
+					} else {
+						System.out.println("should not have reached here. Static dispatch over non-point, non-int, non-bool, while wrinting type_name");
+						return "";
+					}
+				} else {
+					System.out.println("should not have reached here. Static dispatch over non-pointer, non-int, non-bool");
+					return "";
+				}
+				// out.println("\t%" + registerCounter.incrementIndex() + " = call "
+				// 	+ CoolUtils.convertCoolType2IRType(staticDispatchExpr.type) + " "
+				// 	+ funcName + "(" + actualsStr + ")");
+				// return CoolUtils.convertCoolType2IRType(staticDispatchExpr.type) + " %" + registerCounter.getIndex();
 			}
-
-			ifCounter.incrementIndex();
-
-			// check if the object is null
-			out.println("\t%" + registerCounter.incrementIndex() + " = icmp eq "
-				+ callerReg + ", null");
-			out.println("\tbr i1 %" + registerCounter.getIndex() + ", label %if.then"
-				+ ifCounter.getIndex() + ", label %if.else" + ifCounter.getIndex());
-
-			// then block
-			// call abort
-			out.println("if.then" + ifCounter.getIndex() + ":");
-			blocks.add("if.then" + ifCounter.getIndex());
-			out.println("\t%" + registerCounter.incrementIndex() + " = bitcast [25 x i8]* @Abortdisvoid to i8*");
-			out.println("\t%" + registerCounter.incrementIndex() + " = call %class.IO* @"
-				+ CoolUtils.getMangledName(CoolUtils.IO_TYPE_STR, "out_string") + "(%class.IO* null, i8* %"
-				+ registerCounter.prevIndex() + ")");
-			out.println("\tcall void @exit(i32 1)");
-			out.println("\tbr label %if.else" + ifCounter.getIndex());
-
-			// else block
-			// normal execution
-			out.println("if.else" + ifCounter.getIndex() + ":");
-			blocks.add("if.else" + ifCounter.getIndex());
-
-			// function call name
-			String funcName = "@" + CoolUtils.getMangledName(staticDispatchExpr.typeid, staticDispatchExpr.name);
-
-			// get irinfo of caller
-			IRClassInfo callerIRClassInfo = className2IRClassInfoMap.get(CoolUtils.getCoolTypeFromIRType(CoolUtils.getIRTypeFromTypeNReg(callerReg)));
-			while(!CoolUtils.getIRTypeFromTypeNReg(callerReg).equals(CoolUtils.convertCoolType2IRType(staticDispatchExpr.typeid))) {
-
-				// type cast the object to appropriate parent
-				String parentIRType = CoolUtils.getIRClassType(callerIRClassInfo.parent);
-				String callerTypeNReg = CoolUtils.getIRTypeFromTypeNReg(callerReg);
-				if(CoolUtils.isPointer(callerTypeNReg)) callerTypeNReg = callerTypeNReg.substring(0, callerTypeNReg.length()-1);
-				out.println("\t%" + registerCounter.incrementIndex() +
-					" = getelementptr inbounds "+ callerTypeNReg + ", " + callerTypeNReg + "* "
-					+ CoolUtils.getRegisterFromTypeNReg(callerReg) + ", i32 0, i32 0");
-				callerReg = parentIRType + "* %" + registerCounter.getIndex();
-				callerIRClassInfo = className2IRClassInfoMap.get(callerIRClassInfo.parent);
-			}
-
-			String actualsStr = callerReg;
-			for(int i = 0; i < actuals.size(); i++) {
-				actualsStr += ", " + actuals.get(i);
-			}
-
-			out.println("\t%" + registerCounter.incrementIndex() + " = call "
-				+ CoolUtils.convertCoolType2IRType(staticDispatchExpr.type) + " "
-				+ funcName + "(" + actualsStr + ")");
-			return CoolUtils.convertCoolType2IRType(staticDispatchExpr.type) + " %" + registerCounter.getIndex();
 
 		} else {
-			System.out.println("expression type was not expected");
-			System.out.println(expr.type);
-			return "wrong_expr_type. might be dynamic dispatch";
+			System.out.println("expression type was not expected: " + expr.type);
+			return " $$ wrong expr type. might be dynamic dispatch $$";
 		}
-		System.out.println("wrong_expr_type. might be dynamic dispatch");
-		return "wrong_expr_type. might be dynamic dispatch";
+		System.out.println("wrong expr type. might be dynamic dispatch");
+		return "$$ wrong expr type. might be dynamic dispatch $$";
 	}
 }

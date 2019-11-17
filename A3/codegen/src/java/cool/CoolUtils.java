@@ -18,6 +18,9 @@ class CoolUtils {
     static final String BOOL_TYPE_STR = "Bool";
     // the only default function name
     static final String MAIN_FN_STR = "main";
+    // some other function names
+    static final String ABORT_FN_STR = "abort";
+    static final String TYPE_NAME_FN_STR = "type_name";
 
     static final int INT_CLASS_SIZE = 4;
     static final int BOOL_CLASS_SIZE = 1;

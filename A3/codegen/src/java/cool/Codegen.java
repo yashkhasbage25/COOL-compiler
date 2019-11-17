@@ -715,6 +715,11 @@ public class Codegen {
 
 			// predicate block
 			String predicate = handleExpr(classInfo, condExpr.predicate, formalsSet, blocks, out);
+			if(!CoolUtils.getIRTypeFromTypeNReg(predicate).equals("i1")) {
+				out.println("\t%" + registerCounter.incrementIndex() + " = "
+					+ CoolUtils.getIRTypeFromTypeNReg(predicate) + " to "
+					+ "i1");
+			}
 			out.println("\tbr i1 " + CoolUtils.getRegFromTypeNReg(predicate) + ", label %if.then"
 				+ ifCount + ", label %if.else" + ifCount);
 			out.println("if.then" + ifCount + ":");

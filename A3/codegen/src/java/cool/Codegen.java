@@ -261,6 +261,10 @@ public class Codegen {
 
 		// create structure definitions
 		for (String className : dfsOrdering) {
+			if(className.equals(CoolUtils.INT_TYPE_STR)
+				|| className.equals(CoolUtils.BOOL_TYPE_STR)
+				|| className.equals(CoolUtils.STRING_TYPE_STR))
+				continue;
 			out.print("%class." + className + " = type{ ");
 			// object is i8*
 			if (className.equals(CoolUtils.OBJECT_TYPE_STR))
@@ -610,7 +614,7 @@ public class Codegen {
 				+ " to " + type);
 			// call object constructor
 			out.println("\tcall void @" + CoolUtils.getMangledName(newExpr.typeid, newExpr.typeid)
-				+ "(" + type + "%" + registerCounter.getIndex() + ")");
+				+ "(" + type + " %" + registerCounter.getIndex() + ")");
 			// set type name
 			// get type name attr
 			out.println("\t%" + registerCounter.incrementIndex() + " = bitcast %class." + newExpr.typeid
@@ -716,9 +720,10 @@ public class Codegen {
 			// predicate block
 			String predicate = handleExpr(classInfo, condExpr.predicate, formalsSet, blocks, out);
 			if(!CoolUtils.getIRTypeFromTypeNReg(predicate).equals("i1")) {
-				out.println("\t%" + registerCounter.incrementIndex() + " = "
-					+ CoolUtils.getIRTypeFromTypeNReg(predicate) + " to "
+				out.println("\t%" + registerCounter.incrementIndex() + " = trunc "
+					+ predicate + " to "
 					+ "i1");
+				predicate = "i1 %" + registerCounter.getIndex();
 			}
 			out.println("\tbr i1 " + CoolUtils.getRegFromTypeNReg(predicate) + ", label %if.then"
 				+ ifCount + ", label %if.else" + ifCount);
@@ -729,6 +734,7 @@ public class Codegen {
 
 			String ifBody = handleExpr(classInfo, condExpr.ifbody, formalsSet, blocks, out);
 			String ifBodyLabel = blocks.get(blocks.size() - 1);
+			String ifRetIRType = CoolUtils.getIRTypeFromTypeNReg(ifBody);
 			ifBody = CoolUtils.getRegisterFromTypeNReg(ifBody);
 			out.println("\tbr label %if.end" + ifCount);
 			out.println("if.else" + ifCount + ":");
@@ -737,15 +743,29 @@ public class Codegen {
 			// else block
 			String elseBody = handleExpr(classInfo, condExpr.elsebody, formalsSet, blocks, out);
 			String elseBodyLabel = blocks.get(blocks.size() - 1);
+			String elseretIRType = CoolUtils.getIRTypeFromTypeNReg(elseBody);
 			elseBody = CoolUtils.getRegisterFromTypeNReg(elseBody);
 			out.println("\tbr label %if.end" + ifCount);
 			out.println("if.end" + ifCount + ":");
 			blocks.add("if.end" + ifCount);
 
 			// phi block
+			String condRetIRType = CoolUtils.convertCoolType2IRType(condExpr.type);
+			String ifRetReg = ifBody;
+			String elseRetReg = elseBody;
+			if(!ifRetIRType.equals(condRetIRType)) {
+				out.println("\t%" + registerCounter.incrementIndex() + " = bitcast "
+					+ ifRetIRType + " " + ifBody + " to " + condRetIRType);
+				ifRetReg = "%" + registerCounter.getIndex();
+			}
+			if(!ifRetIRType.equals(condRetIRType)) {
+				out.println("\t%" + registerCounter.incrementIndex() + " = bitcast "
+					+ elseretIRType + " " + elseBody + " to " + condRetIRType);
+				elseRetReg = "%" + registerCounter.getIndex();
+			}
 			out.println("\t%" + registerCounter.incrementIndex() + " = phi "
-				+ CoolUtils.convertCoolType2IRType(condExpr.type) + " [" + ifBody + ", %"
-				+ ifBodyLabel + "], [" + elseBody + ", %" + elseBodyLabel + "]");
+				+ condRetIRType + " [" + ifRetReg + ", %"
+				+ ifBodyLabel + "], [" + elseRetReg + ", %" + elseBodyLabel + "]");
 			return CoolUtils.convertCoolType2IRType(condExpr.type) + " %" + registerCounter.getIndex();
 
 		} else if(expr instanceof AST.static_dispatch) {
